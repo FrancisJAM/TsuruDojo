@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Tsuru Dojo</string>
+    <string name="eventos">Eventos</string>
+    <string name="alunos">Alunos</string>
+    <string name="mensalidade">Mensalidade</string>
+    <string name="selecionar_data">Selecionar data</string>
+    <string name="dia">Dia</string>
+    <string name="mes">Mês</string>
+    <string name="ano">Ano</string>
+    <string name="aceitar">Aceitar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="selecionar_mes_e_ano">Selecionar Mês e Ano</string>
+    <string name="evento">Evento</string>
+    <string name="nome">Nome</string>
+    <string name="pagamento">Pagamento</string>
+    <string name="euro">€</string>
+    <string name="data">Data</string>
+    <string name="barra">/</string>
+    <string name="pago">Pago</string>
+    <string name="alterar">Alterar</string>
+    <string name="adicionar">Adicionar</string>
+    <string name="pagamento_padrao">Pagamento Padrão</string>
+    <string name="pagamentos_mensais">Pagamentos Mensais</string>
+    <string name="aluno">Aluno</string>
+</resources>
