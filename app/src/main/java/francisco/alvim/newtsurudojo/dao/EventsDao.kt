@@ -6,7 +6,7 @@ import francisco.alvim.newtsurudojo.entity.EventEntity
 @Dao
 interface EventsDao {
 
-    @Query("SELECT * FROM event")
+    @Query("SELECT * FROM event ORDER BY event.eventDate DESC")
     fun getAllEvents(): List<EventEntity>
 
     @Insert

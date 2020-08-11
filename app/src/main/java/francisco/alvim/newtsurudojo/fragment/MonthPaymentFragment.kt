@@ -48,9 +48,11 @@ class MonthPaymentFragment : Fragment() {
         }
         btnMonthPaymentMonthNext.setOnClickListener {
             viewModel.changeMonth(1)
+            viewModel.updateMonthInTop()
         }
         btnMonthPaymentMonthPrev.setOnClickListener {
             viewModel.changeMonth(-1)
+            viewModel.updateMonthInTop()
         }
         btnNewMonthlyPaymentAdd.setOnClickListener {
             viewModel.addNewPayment(

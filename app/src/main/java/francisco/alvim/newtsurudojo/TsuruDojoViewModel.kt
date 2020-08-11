@@ -435,4 +435,8 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         }
     }
 
+    fun updateMonthInTop() {
+        setMonthPaymentInLayout(paymentsMonth, paymentsYear)
+    }
+
 }
