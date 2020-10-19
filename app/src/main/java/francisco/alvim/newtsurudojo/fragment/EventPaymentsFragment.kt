@@ -54,22 +54,21 @@ class EventPaymentsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-
-        viewModel.currentEventPayments.observe(this, Observer {
+        viewModel.currentEventPayments.observe(viewLifecycleOwner, Observer {
             eventPaymentList.adapter = EventPaymentsAdapter(context!!,it, viewModel)
-            eventPaymentList.setOnItemClickListener { parent, v, pos, id ->
+            eventPaymentList.setOnItemClickListener { _, _, pos, _ ->
                 showEventPaymentForStudent(it[pos])
                 viewModel.currentEventPayment = it[pos]
                 isNewEventPayment = false
                 updateNewEventPaymentButton()
             }
-            eventPaymentList.setOnItemLongClickListener { parent, view, pos, id ->
+            eventPaymentList.setOnItemLongClickListener { _, _, pos, _ ->
                 viewModel.onRemoveEventPaymentClick(it[pos])
                 true
             }
         })
 
-        viewModel.removeEventPaymentClick.observe(this, Observer {
+        viewModel.removeEventPaymentClick.observe(viewLifecycleOwner, Observer {
             if (it.isFirstRun) {
                 val eventPayment = it.getContent()
                 val dialog = AlertDialog.Builder(context)
@@ -84,19 +83,19 @@ class EventPaymentsFragment : Fragment() {
                 }
             }
         })
-        viewModel.newEventPaymentDateDay.observe(this, Observer {
+        viewModel.newEventPaymentDateDay.observe(viewLifecycleOwner, Observer {
             etNewEventPaymentDateDay.setText(it.toString())
         })
-        viewModel.newEventPaymentDateMonth.observe(this, Observer {
+        viewModel.newEventPaymentDateMonth.observe(viewLifecycleOwner, Observer {
             etNewEventPaymentDateMonth.setText(it.toString())
         })
-        viewModel.newEventPaymentDateYear.observe(this,Observer {
+        viewModel.newEventPaymentDateYear.observe(viewLifecycleOwner,Observer {
             etNewEventPaymentDateYear.setText(it.toString())
         })
-        viewModel.totalEventPayment.observe(this, Observer {
+        viewModel.totalEventPayment.observe(viewLifecycleOwner, Observer {
             eventPaymentsTotal.text = it
         })
-        viewModel.studentsNotInEventPayment.observe(this, Observer {
+        viewModel.studentsNotInEventPayment.observe(viewLifecycleOwner, Observer {
             if (it.isFirstRun){
                 val dialog = Dialog(context!!)
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -106,13 +105,12 @@ class EventPaymentsFragment : Fragment() {
                 val adapter = StudentsMissingInEventPaymentsAdapter(context!!,it.getContent(),viewModel)
                 val listView = dialog.studentPickerList
                 listView.adapter = adapter
-                listView.setOnItemClickListener { parent, view, position, id ->
+                listView.setOnItemClickListener { _, view, position, _ ->
                     val selection = view.imgStudentPickerCardSelected
                     if (selection.isActivated){
                         viewModel.removeSelectedStudentNameInPicker(position)
                     } else {
                         viewModel.addSelectedStudentNameInPicker(position)
-
                     }
                     selection.isActivated = !selection.isActivated
                 }
@@ -127,7 +125,7 @@ class EventPaymentsFragment : Fragment() {
                 dialog.show()
             }
         })
-        viewModel.selectedNamesInPicker.observe(this, Observer {
+        viewModel.selectedNamesInPicker.observe(viewLifecycleOwner, Observer {
             if (it.isFirstRun) {
                 it.getContent().forEach { name ->
                     if (name.isNotBlank()) viewModel.addNewEventPaymentStudent(name)

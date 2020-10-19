@@ -15,7 +15,7 @@ import java.util.*
 
 class MonthPaymentsAdapter(context: Context, list: List<Pair<StudentEntity,MonthPaymentEntity?>>, val viewModel: TsuruDojoViewModel): ArrayAdapter<Pair<StudentEntity,MonthPaymentEntity?>>(context,0,list)  {
 
-    override fun getView(pos: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(pos: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.card_month_payment, parent, false)
         if (pos >= count) return view
         val currentItem = getItem(pos)

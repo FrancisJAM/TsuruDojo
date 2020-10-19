@@ -7,10 +7,7 @@ import androidx.lifecycle.ViewModelProviders
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.database.AppDatabase
-import francisco.alvim.newtsurudojo.fragment.EventPaymentsFragment
-import francisco.alvim.newtsurudojo.fragment.EventsFragment
-import francisco.alvim.newtsurudojo.fragment.MonthPaymentFragment
-import francisco.alvim.newtsurudojo.fragment.StudentFragment
+import francisco.alvim.newtsurudojo.fragment.*
 import kotlinx.android.synthetic.main.activity_tsuru_dojo.*
 
 class TsuruDojoActivity : AppCompatActivity() {
@@ -29,6 +26,7 @@ class TsuruDojoActivity : AppCompatActivity() {
         btnSectionPayments.setActivated(true)
         btnSectionEvents.setActivated(false)
         btnSectionStudents.setActivated(false)
+        btnSectionBalance.setActivated(false)
         setupButtons()
         setupObservers()
     }
@@ -52,6 +50,7 @@ class TsuruDojoActivity : AppCompatActivity() {
             btnSectionPayments.setActivated(true)
             btnSectionEvents.setActivated(false)
             btnSectionStudents.setActivated(false)
+            btnSectionBalance.setActivated(false)
             viewModel.updateSpinnerNames()
         }
         btnSectionEvents.setOnClickListener {
@@ -59,12 +58,21 @@ class TsuruDojoActivity : AppCompatActivity() {
             btnSectionPayments.setActivated(false)
             btnSectionEvents.setActivated(true)
             btnSectionStudents.setActivated(false)
+            btnSectionBalance.setActivated(false)
         }
         btnSectionStudents.setOnClickListener {
             supportFragmentManager.beginTransaction().replace(mainFragment.id,StudentFragment()).commitAllowingStateLoss()
             btnSectionPayments.setActivated(false)
             btnSectionEvents.setActivated(false)
             btnSectionStudents.setActivated(true)
+            btnSectionBalance.setActivated(false)
+        }
+        btnSectionBalance.setOnClickListener {
+            supportFragmentManager.beginTransaction().replace(mainFragment.id,BalanceFragment()).commitAllowingStateLoss()
+            btnSectionPayments.setActivated(false)
+            btnSectionEvents.setActivated(false)
+            btnSectionStudents.setActivated(false)
+            btnSectionBalance.setActivated(true)
         }
     }
 

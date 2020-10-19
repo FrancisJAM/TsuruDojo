@@ -16,7 +16,7 @@ import java.util.*
 
 class EventPaymentsAdapter(context: Context, list: List<EventPaymentEntity>, val viewModel: TsuruDojoViewModel): ArrayAdapter<EventPaymentEntity>(context,0,list) {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.card_event_payment, parent, false)
         val currentItem = getItem(position)
         view.eventPaymentCardName.text = currentItem?.studentName ?: ""

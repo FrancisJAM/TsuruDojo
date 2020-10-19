@@ -6,10 +6,7 @@ import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import francisco.alvim.newtsurudojo.database.AppDatabase
-import francisco.alvim.newtsurudojo.entity.EventEntity
-import francisco.alvim.newtsurudojo.entity.EventPaymentEntity
-import francisco.alvim.newtsurudojo.entity.MonthPaymentEntity
-import francisco.alvim.newtsurudojo.entity.StudentEntity
+import francisco.alvim.newtsurudojo.entity.*
 import kotlinx.coroutines.*
 import java.text.DecimalFormat
 import java.util.*
@@ -51,12 +48,17 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     val namePosition = MutableLiveData<Int>()
     val totalMonthPayment = MutableLiveData<String>()
     val totalEventPayment = MutableLiveData<String>()
+    val allBalanceMovements = MutableLiveData<List<BalanceEntity>>()
+    val newMovementDateDay = MutableLiveData<Int>()
+    val newMovementDateMonth = MutableLiveData<Int>()
+    val newMovementDateYear = MutableLiveData<Int>()
     val openEventPage = MutableLiveData<Event<Unit>>()
     val onbackClick = MutableLiveData<Event<Unit>>()
 
     var currentStudent = StudentEntity(null,"","","",true,35)
     var currentEvent = EventEntity(null,"",0.0,0)
     var currentEventPayment = EventPaymentEntity(null,0,"",0.0,0,false)
+    var currentBalanceMovement = BalanceEntity(null,0,0,0.0,0,"")
     val paymentsInMonth = mutableListOf<Pair<StudentEntity,MonthPaymentEntity?>>()
     val arrangedIdList = mutableListOf<Int>()
     val arrangedNameList = mutableListOf<String>()
@@ -73,17 +75,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
             studentList.forEach {
                 arrangedNameList.add(it.studentName ?: "")
             }
-            arrangedNameList.sort()
-            arrangedNameList.forEach { name ->
-                run loop@{
-                    studentList.forEach {
-                        if (name == it.studentName) {
-                            arrangedIdList.add(it.id ?: 0)
-                            return@loop
-                        }
-                    }
-                }
-            }
+            arrangeStudents(studentList)
 
             Handler(Looper.getMainLooper()).post{
                 changeMonth(0)
@@ -92,9 +84,18 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         }
     }
 
-    fun getValues(){
-        paymentsDoneInMonth.value = paymentsInMonth
-        newPaymentStudentsNames.value = arrangedNameList
+    private fun arrangeStudents(studentList: List<StudentEntity>) {
+        arrangedNameList.sort()
+        arrangedNameList.forEach { name ->
+            run loop@{
+                studentList.forEach {
+                    if (name == it.studentName) {
+                        arrangedIdList.add(it.id ?: 0)
+                        return@loop
+                    }
+                }
+            }
+        }
     }
 
     private fun getValuesOfMonth() {
@@ -152,7 +153,6 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
             else -> "Janeiro"
         }
     }
-
 
     fun addNewPayment(namePos: Int, amount: String, month: Int, year: Int, dateDay: Int, dateMonth: Int, dateYear: Int) {
 
@@ -251,11 +251,16 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     }
 
     fun updateTheStudent(name: String, contact: String, defaultPayment: Int, levelNum: String, levelType: String, trains: Boolean) {
-        currentStudent.studentName = name
-        currentStudent.studentCell = contact
-        currentStudent.defaultPayment = defaultPayment
-        currentStudent.studentLevel = "$levelNum-$levelType"
-        currentStudent.studentTrains = trains
+        val student = StudentEntity(null,name,"$levelNum-$levelType",contact,trains,defaultPayment)
+        updateTheStudent(student)
+    }
+
+    fun updateTheStudent(student: StudentEntity) {
+        currentStudent.studentName = student.studentName
+        currentStudent.studentCell = student.studentCell
+        currentStudent.defaultPayment = student.defaultPayment
+        currentStudent.studentLevel = student.studentLevel
+        currentStudent.studentTrains = student.studentTrains
         updateStudent(currentStudent)
     }
 
@@ -265,7 +270,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         }
     }
 
-    fun addTheStudent(name: String, contact: String, defaultPayment: Int, levelNum: String, levelType: String, trains: Boolean) {
+    fun addNewStudent(name: String, contact: String, defaultPayment: Int, levelNum: String, levelType: String, trains: Boolean) {
         val student = StudentEntity(null,name, "$levelNum-$levelType",contact,trains,defaultPayment)
         addNewStudent(student)
     }
@@ -415,6 +420,83 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         newEventPaymentDateYear.value = year
     }
 
+
+    fun getBalanceMovements(){
+        ioScope.launch {
+            val list = database.balanceDao().getAllBalanceMovements().toMutableList()
+            list.sortByDescending { it.movementDate }
+            Handler(Looper.getMainLooper()).post {
+                allBalanceMovements.value = list
+            }
+        }
+    }
+
+    fun addBalanceMovement(name: String, amount: String, day: Int, month: Int, year: Int, isPositive: Boolean) {
+        val date = GregorianCalendar(year,month-1,day)
+        val movedAmount = amount.toDoubleOrNull() ?: 0.0
+        if (movedAmount <= 0.0) return
+        val movementAmount = movedAmount * if (isPositive) 1 else -1
+        val balanceMovement = BalanceEntity(
+            null,
+            month,
+            year,
+            movementAmount,
+            date.timeInMillis,
+            name
+        )
+        ioScope.launch {
+            database.balanceDao().insertBalanceMovement(balanceMovement)
+            Handler(Looper.getMainLooper()).post{
+                getBalanceMovements()
+            }
+        }
+    }
+
+    fun updateBalanceMovement(name: String, amount: String, day: Int, month: Int, year: Int, isPositive: Boolean) {
+        val date = GregorianCalendar(year,month-1,day)
+        val movedAmount = amount.toDoubleOrNull() ?: 0.0
+        if (movedAmount <= 0.0) return
+        val movementAmount = movedAmount * if (isPositive) 1 else -1
+
+        currentBalanceMovement.movementMonth = month
+        currentBalanceMovement.movementYear = year
+        currentBalanceMovement.movementAmount = movementAmount
+        currentBalanceMovement.movementDate = date.timeInMillis
+        currentBalanceMovement.movementName = name
+        ioScope.launch {
+            database.balanceDao().updateBalanceMovement(currentBalanceMovement)
+            Handler(Looper.getMainLooper()).post{
+                getBalanceMovements()
+            }
+        }
+    }
+
+    fun removeBalanceMovement(balanceMovement: BalanceEntity){
+        ioScope.launch {
+            database.balanceDao().deleteBalanceMovement(balanceMovement)
+            Handler(Looper.getMainLooper()).post{
+                getBalanceMovements()
+            }
+        }
+    }
+
+    fun setCurrentMovement(pos: Int) {
+        allBalanceMovements.value?.get(pos)?.let{
+            currentBalanceMovement = it
+        }
+    }
+
+    fun setDateOfMovementInLayout(day: Int, month: Int, year: Int) {
+        newMovementDateDay.value = day
+        newMovementDateMonth.value = month
+        newMovementDateYear.value = year
+    }
+
+    fun onRemoveMovementClick(pos: Int) {
+
+    }
+
+
     fun onBackClick() {
         onbackClick.value = Event(Unit)
     }
@@ -438,5 +520,6 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     fun updateMonthInTop() {
         setMonthPaymentInLayout(paymentsMonth, paymentsYear)
     }
+
 
 }

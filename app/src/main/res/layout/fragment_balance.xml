@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.BalanceFragment">
+    <TextView
+        android:id="@+id/lblBalanceTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/balanco"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/balanceLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@+id/lblBalanceTitle"
+        >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:background="#50bbbbbb"
+            />
+
+        <TextView
+            android:id="@+id/tvBalanceNameLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/nome"
+            />
+
+        <EditText
+            android:id="@+id/etBalanceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:inputType="text"
+            android:maxLength="50"
+            android:maxLines="1"
+            android:backgroundTint="#666666"
+            android:textColor="@color/default_black"
+            tools:text="Compra única"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvBalanceNameLabel"
+            tools:ignore="Autofill,LabelFor"
+            />
+
+        <TextView
+            android:id="@+id/tvBalancePaymentLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tvBalanceDateLabel"
+            app:layout_constraintTop_toBottomOf="@+id/etBalanceName"
+            android:text="@string/movimento"
+            />
+
+        <EditText
+            android:id="@+id/etBalanceAmount"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:inputType="number"
+            android:gravity="center"
+            android:maxLength="5"
+            android:maxLines="1"
+            android:backgroundTint="#666666"
+            android:textColor="@color/default_black"
+            tools:text="20.50"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvBalancePaymentLabel"
+            tools:ignore="Autofill,LabelFor" />
+
+        <TextView
+            android:id="@+id/tvBalancePaymentAmountType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:gravity="center"
+            android:text="@string/euro"
+            android:textSize="20sp"
+            android:textColor="@color/default_black"
+            app:layout_constraintStart_toEndOf="@+id/etBalanceAmount"
+            app:layout_constraintBaseline_toBaselineOf="@+id/etBalanceAmount"
+            />
+
+        <ImageView
+            android:id="@+id/btnBalancePositive"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            android:src="@drawable/selectable_ic_balance_positive"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toEndOf="@+id/tvBalancePaymentAmountType"
+            app:layout_constraintTop_toTopOf="@+id/tvBalancePaymentAmountType"
+            app:layout_constraintBottom_toBottomOf="@+id/tvBalancePaymentAmountType"
+            app:layout_constraintEnd_toStartOf="@+id/btnBalanceNegative"
+            android:contentDescription="@null" />
+
+
+        <ImageView
+            android:id="@+id/btnBalanceNegative"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/selectable_ic_balance_negative"
+            app:layout_constraintStart_toEndOf="@+id/btnBalancePositive"
+            app:layout_constraintTop_toTopOf="@+id/tvBalancePaymentAmountType"
+            app:layout_constraintBottom_toBottomOf="@+id/tvBalancePaymentAmountType"
+            app:layout_constraintEnd_toEndOf="@+id/tvBalancePaymentLabel"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tvBalanceDateLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintStart_toEndOf="@+id/tvBalancePaymentLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etBalanceName"
+            android:text="@string/data"
+            />
+
+        <EditText
+            android:id="@+id/etBalanceDateDay"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="2"
+            android:maxLines="1"
+            android:backgroundTint="#666666"
+            android:enabled="false"
+            android:textColor="@color/default_black"
+            app:layout_constraintStart_toStartOf="@+id/tvBalanceDateLabel"
+            app:layout_constraintTop_toBottomOf="@+id/tvBalanceDateLabel"
+            tools:ignore="Autofill,LabelFor,TextFields" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/barra"
+            android:textSize="24sp"
+            app:layout_constraintTop_toTopOf="@+id/etBalanceDateDay"
+            app:layout_constraintBottom_toBottomOf="@+id/etBalanceDateDay"
+            app:layout_constraintStart_toEndOf="@+id/etBalanceDateDay"
+            app:layout_constraintEnd_toStartOf="@+id/etBalanceDateMonth"/>
+
+        <EditText
+            android:id="@+id/etBalanceDateMonth"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="2"
+            android:maxLines="1"
+            android:backgroundTint="#666666"
+            android:enabled="false"
+            android:textColor="@color/default_black"
+            app:layout_constraintStart_toEndOf="@+id/etBalanceDateDay"
+            app:layout_constraintTop_toBottomOf="@+id/tvBalanceDateLabel"
+            tools:ignore="Autofill,LabelFor,TextFields" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/barra"
+            android:textSize="24sp"
+            app:layout_constraintTop_toTopOf="@+id/etBalanceDateDay"
+            app:layout_constraintBottom_toBottomOf="@+id/etBalanceDateDay"
+            app:layout_constraintStart_toEndOf="@+id/etBalanceDateMonth"
+            app:layout_constraintEnd_toStartOf="@+id/etBalanceDateYear"/>
+
+        <EditText
+            android:id="@+id/etBalanceDateYear"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="4"
+            android:maxLines="1"
+            android:backgroundTint="#666666"
+            android:enabled="false"
+            android:textColor="@color/default_black"
+            app:layout_constraintStart_toEndOf="@+id/etBalanceDateMonth"
+            app:layout_constraintTop_toBottomOf="@+id/tvBalanceDateLabel"
+            tools:ignore="Autofill,LabelFor,TextFields" />
+
+        <Button
+            android:id="@+id/btnBalanceChooseDate"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@color/transparent"
+            app:layout_constraintTop_toTopOf="@+id/etBalanceDateDay"
+            app:layout_constraintBottom_toBottomOf="@+id/etBalanceDateDay"
+            app:layout_constraintStart_toStartOf="@+id/etBalanceDateDay"
+            app:layout_constraintEnd_toEndOf="@+id/etBalanceDateYear"/>
+
+        <Button
+            android:id="@+id/btnBalanceRecurrent"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/etBalanceAmount"
+            app:layout_constraintStart_toStartOf="@+id/etBalanceAmount"
+            app:layout_constraintEnd_toStartOf="@+id/btnBalanceAdd"
+            android:text="@string/recorrente"
+            />
+
+        <Button
+            android:id="@+id/btnBalanceAdd"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/etBalanceAmount"
+            app:layout_constraintStart_toStartOf="@+id/tvBalanceDateLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="@string/adicionar"
+            />
+
+        <Button
+            android:id="@+id/btnBalanceChange"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/etBalanceAmount"
+            app:layout_constraintStart_toStartOf="@+id/tvBalanceDateLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="@string/mudar"
+            android:visibility="gone"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/viewBalanceLeftLine"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="#bbbbbb"
+        app:layout_constraintBottom_toBottomOf="@+id/btnNewBalanceMovementShow"
+        app:layout_constraintTop_toTopOf="@+id/btnNewBalanceMovementShow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnNewBalanceMovementShow"/>
+    <View
+        android:id="@+id/viewBalanceRightLine"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="#bbbbbb"
+        app:layout_constraintBottom_toBottomOf="@+id/viewBalanceLeftLine"
+        app:layout_constraintTop_toTopOf="@+id/viewBalanceLeftLine"
+        app:layout_constraintStart_toEndOf="@id/btnNewBalanceMovementShow"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/btnNewBalanceMovementShow"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_add_circle_outline_gray"
+        android:contentDescription="@null"
+        android:layout_marginTop="8dp"
+        android:rotation="0"
+        app:layout_constraintTop_toBottomOf="@+id/balanceLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/viewBalanceLeftLine"
+        />
+
+    <TextView
+        android:id="@+id/lblBalanceTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/btnNewBalanceMovementShow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Total conta: 100€"
+        />
+
+    <ListView
+        android:id="@+id/balanceMovementList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="50dp"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toBottomOf="@+id/btnNewBalanceMovementShow"
+        tools:listitem="@layout/card_month_payment"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

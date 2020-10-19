@@ -47,10 +47,10 @@ class EventsFragment : Fragment() {
 
         viewModel.allEvents.observe(this, Observer {
             eventList.adapter = EventsAdapter(context!!,it, viewModel)
-            eventList.setOnItemClickListener { parent, v, pos, id ->
+            eventList.setOnItemClickListener { _, _, pos, _ ->
                 viewModel.headToEventPage(it[pos])
             }
-            eventList.setOnItemLongClickListener { parent, view, pos, id ->
+            eventList.setOnItemLongClickListener { _, _, pos, _ ->
                 viewModel.onRemoveEventClick(it[pos])
                 true
             }

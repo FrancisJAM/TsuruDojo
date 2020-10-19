@@ -235,7 +235,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/etNewStudentDefaultPayment"
             app:layout_constraintStart_toStartOf="@+id/tvNewStudentLevelLabel"
             app:layout_constraintEnd_toEndOf="parent"
-            android:text="Adicionar"
+            android:text="@string/adicionar"
             />
 
         <Button
@@ -247,13 +247,10 @@
             app:layout_constraintBottom_toBottomOf="@+id/etNewStudentDefaultPayment"
             app:layout_constraintStart_toStartOf="@+id/tvNewStudentLevelLabel"
             app:layout_constraintEnd_toEndOf="parent"
-            android:text="Mudar"
+            android:text="@string/mudar"
             />
 
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     <View
         android:id="@+id/view_students_left_line"

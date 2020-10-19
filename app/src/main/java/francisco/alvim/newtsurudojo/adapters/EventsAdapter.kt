@@ -15,7 +15,7 @@ import java.util.*
 
 class EventsAdapter(context: Context, list: List<EventEntity>, val viewModel: TsuruDojoViewModel): ArrayAdapter<EventEntity>(context,0,list) {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.card_event, parent, false)
         val currentItem = getItem(position)
         view.eventCardName.text = currentItem?.eventName ?: ""

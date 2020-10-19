@@ -19,6 +19,7 @@ import com.aigestudio.wheelpicker.WheelPicker
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.adapters.StudentsAdapter
+import francisco.alvim.newtsurudojo.entity.StudentEntity
 import kotlinx.android.synthetic.main.fragment_student.*
 import kotlinx.android.synthetic.main.level_picker.*
 
@@ -27,6 +28,8 @@ class StudentFragment : Fragment() {
     lateinit var viewModel: TsuruDojoViewModel
     private var newStudent = true
     lateinit var levelNumWheelPicker: WheelPicker
+
+    private val levelTypesValues = listOf("Kyu", "Dan")
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
@@ -122,15 +125,8 @@ class StudentFragment : Fragment() {
             if (!newStudent) makeButtonChangeStudent()
         }
         btnStudentChange.setOnClickListener {
-            val defaultPayment = etNewStudentDefaultPayment.text.toString().toIntOrNull() ?: 0
-            viewModel.updateTheStudent(
-                etNewStudentName.text.toString(),
-                etNewStudentContact.text.toString(),
-                defaultPayment,
-                etNewStudentLevelNum.text.toString(),
-                etNewStudentLevelType.text.toString(),
-                btnStudentsTrains.isActivated
-            )
+            val studentEntity = getStudentDataInLayout()
+            viewModel.updateTheStudent(studentEntity)
             clearNewStudentData()
             hideNewStudentLayout()
             newStudent = true
@@ -138,46 +134,34 @@ class StudentFragment : Fragment() {
             closeKeyboard(it)
         }
         btnStudentAdd.setOnClickListener {
-            val defaultPayment = etNewStudentDefaultPayment.text.toString().toIntOrNull() ?: 0
-            viewModel.addTheStudent(
-                etNewStudentName.text.toString(),
-                etNewStudentContact.text.toString(),
-                defaultPayment,
-                etNewStudentLevelNum.text.toString(),
-                etNewStudentLevelType.text.toString(),
-                btnStudentsTrains.isActivated
-            )
+            val newStudentEntity = getStudentDataInLayout()
+            viewModel.addNewStudent(newStudentEntity)
             clearNewStudentData()
             hideNewStudentLayout()
             newStudent = true
             updateNewStudentButton()
             closeKeyboard(it)
         }
+
         btnStudentLevel.setOnClickListener {
             val dialog = Dialog(context!!)
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
             dialog.setCancelable(false)
             dialog.setContentView(R.layout.level_picker)
-            val levelNumWheelFrameLayout = dialog.levelPickerNum
-            val levelTypeWheelFrameLayout = dialog.levelPickerType
+
             val flParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             flParams.gravity = Gravity.CENTER
 
-            addLevelNumPicker(
-                levelNumWheelFrameLayout,
-                etNewStudentLevelType.text.toString() == "Dan",
-                etNewStudentLevelNum.text.toString().toIntOrNull()
-            )
+            val levelNumWheelFrameLayout = dialog.levelPickerNum
+            val levelType = etNewStudentLevelType.text.toString()
+            val isDan = levelType == "Dan"
+            val levelNum = etNewStudentLevelNum.text.toString().toIntOrNull()
 
-            val levelTypeWheelPicker = WheelPicker(context!!)
-            levelTypeWheelPicker.setAtmospheric(true)
-            levelTypeWheelPicker.visibleItemCount = 5
-            levelTypeWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            levelTypeWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val levelTypesValues = mutableListOf<String>()
-            levelTypesValues.add("Kyu")
-            levelTypesValues.add("Dan")
-            levelTypeWheelPicker.data = levelTypesValues
+            addLevelNumPicker(levelNumWheelFrameLayout, isDan, levelNum)
+
+            val levelTypeWheelPicker = addLevelTypePicker()
+            val levelTypeWheelFrameLayout = dialog.levelPickerType
+
             levelTypeWheelFrameLayout.addView(levelTypeWheelPicker, flParams)
             levelTypeWheelPicker.setOnWheelChangeListener(object: WheelPicker.OnWheelChangeListener{
                 override fun onWheelSelected(pos: Int) {
@@ -191,7 +175,6 @@ class StudentFragment : Fragment() {
             }
 
             val acceptBtn = dialog.btnlevelPickerAdd
-            val cancelBtn = dialog.btnlevelPickerCancel
             acceptBtn.setOnClickListener {
                 val type = levelTypesValues[levelTypeWheelPicker.currentItemPosition]
                 val levelNumValues = getLevelNumValues(levelTypeWheelPicker.currentItemPosition == 1)
@@ -199,9 +182,22 @@ class StudentFragment : Fragment() {
                 viewModel.setNewStudentLevelLayout(Integer.parseInt(level), type)
                 dialog.dismiss()
             }
+
+            val cancelBtn = dialog.btnlevelPickerCancel
             cancelBtn.setOnClickListener { dialog.dismiss() }
             dialog.show()
         }
+    }
+
+    private fun getStudentDataInLayout(): StudentEntity {
+        val defaultPayment = etNewStudentDefaultPayment.text.toString().toIntOrNull() ?: 0
+        val newStudentName = etNewStudentName.text.toString()
+        val newStudentContract = etNewStudentContact.text.toString()
+        val newStudentLevelNum = etNewStudentLevelNum.text.toString()
+        val newStudentLevelType = etNewStudentLevelType.text.toString()
+        val newStudentLevel = "$newStudentLevelNum-$newStudentLevelType"
+        val newStudentTrains = btnStudentsTrains.isActivated
+        return StudentEntity(null,newStudentName,newStudentLevel,newStudentContract,newStudentTrains,defaultPayment)
     }
 
     private fun remakeLevelNumPicker(levelNumWheelFrameLayout: FrameLayout, isDan: Boolean){
@@ -213,13 +209,14 @@ class StudentFragment : Fragment() {
         val flParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         flParams.gravity = Gravity.CENTER
 
-        val newLevelNumWheelPicker = WheelPicker(context!!)
-        newLevelNumWheelPicker.setAtmospheric(true)
-        newLevelNumWheelPicker.visibleItemCount = 5
-        newLevelNumWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-        newLevelNumWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-        val levelNumValues = getLevelNumValues(isDan)
-        newLevelNumWheelPicker.data = levelNumValues
+        val newLevelNumWheelPicker = WheelPicker(context!!).apply {
+            setAtmospheric(true)
+            visibleItemCount = 5
+            selectedItemTextColor = Color.parseColor("#000000")
+            itemTextColor = Color.parseColor("#50BBBBBB")
+            val levelNumValues = getLevelNumValues(isDan)
+            data = levelNumValues
+        }
         levelNumWheelFrameLayout.addView(newLevelNumWheelPicker, flParams)
         levelNumWheelFrameLayout.post{
             newLevelNumWheelPicker.setSelectedItemPosition(
@@ -231,6 +228,16 @@ class StudentFragment : Fragment() {
             )
         }
         levelNumWheelPicker = newLevelNumWheelPicker
+    }
+
+    private fun addLevelTypePicker() : WheelPicker {
+        return WheelPicker(context!!).apply {
+            setAtmospheric(true)
+            visibleItemCount = 5
+            selectedItemTextColor = Color.parseColor("#000000")
+            itemTextColor = Color.parseColor("#50BBBBBB")
+            data = levelTypesValues
+        }
     }
 
     private fun getLevelNumValues(isDan: Boolean): MutableList<String>{

@@ -12,7 +12,7 @@ import kotlinx.android.synthetic.main.card_student.view.*
 
 class StudentsAdapter(context: Context, list: List<StudentEntity>, val viewModel: TsuruDojoViewModel): ArrayAdapter<StudentEntity>(context,0,list) {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.card_student, parent, false)
         val currentItem = getItem(position)
         view.tvStudentCardName.text = currentItem?.studentName ?: ""
