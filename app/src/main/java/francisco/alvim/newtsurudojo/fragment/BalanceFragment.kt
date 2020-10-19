@@ -3,7 +3,6 @@ package francisco.alvim.newtsurudojo.fragment
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -11,10 +10,14 @@ import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.aigestudio.wheelpicker.WheelPicker
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.adapters.BalanceMovementsAdapter
+import francisco.alvim.newtsurudojo.data.Constants
+import francisco.alvim.newtsurudojo.data.Constants.FIRST_YEAR
+import francisco.alvim.newtsurudojo.data.Utils
+import francisco.alvim.newtsurudojo.data.Utils.createDateDialog
+import francisco.alvim.newtsurudojo.data.WheelType
 import kotlinx.android.synthetic.main.date_picker_full.*
 import kotlinx.android.synthetic.main.fragment_balance.*
 import java.text.SimpleDateFormat
@@ -93,109 +96,12 @@ class BalanceFragment : Fragment() {
             closeKeyboard(it)
         }
 
-
         btnBalanceChooseDate.setOnClickListener {
-            val dialog = Dialog(context!!)
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-            dialog.setCancelable(false)
-            dialog.setContentView(R.layout.date_picker_full)
-            val dayWheelFrameLayout = dialog.datePickerDay
-            val monthWheelFrameLayout = dialog.datePickerMonth
-            val yearWheelFrameLayout = dialog.datePickerYear
-            val flParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            flParams.gravity = Gravity.CENTER
-
-            val dayWheelPicker = WheelPicker(context!!)
-            dayWheelPicker.setAtmospheric(true)
-            dayWheelPicker.visibleItemCount = 5
-            dayWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            dayWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val dayValues = mutableListOf<String>()
-            for (i in 1..31){
-                dayValues.add(i.toString())
-            }
-            dayWheelPicker.data = dayValues
-            dayWheelFrameLayout.addView(dayWheelPicker, flParams)
-            dayWheelFrameLayout.post{
-                dayWheelPicker.setSelectedItemPosition((Integer.parseInt(etBalanceDateDay.text.toString()) ?: 0)-1)
-            }
-
-            val monthWheelPicker = WheelPicker(context!!)
-            monthWheelPicker.setAtmospheric(true)
-            monthWheelPicker.visibleItemCount = 5
-            monthWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            monthWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val monthValues = mutableListOf<String>()
-            for (i in 1..12){
-                monthValues.add(i.toString())
-            }
-            monthWheelPicker.data = monthValues
-
-
-            val yearWheelPicker = WheelPicker(context!!)
-            yearWheelPicker.setAtmospheric(true)
-            yearWheelPicker.visibleItemCount = 5
-            yearWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            yearWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val yearValues = mutableListOf<String>()
-            for (i in 2000..2050){
-                yearValues.add(i.toString())
-            }
-            yearWheelPicker.data = yearValues
-
-            monthWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                    val cal = Calendar.getInstance()
-                    cal.set(2000 + yearWheelPicker.currentItemPosition,pos,1)
-                    val dayData = mutableListOf<String>()
-                    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                    for (i in 1..maxDay){
-                        dayData.add(i.toString())
-                    }
-                    var currentDaySelected = dayWheelPicker.currentItemPosition
-                    if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                    dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                    dayWheelPicker.data = dayData
-                }
-            })
-            monthWheelFrameLayout.addView(monthWheelPicker, flParams)
-            monthWheelFrameLayout.post{
-                monthWheelPicker.setSelectedItemPosition((Integer.parseInt(etBalanceDateMonth.text.toString()) ?: 0)-1)
-            }
-            yearWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                    val cal = Calendar.getInstance()
-                    cal.set(2000 + pos,monthWheelPicker.currentItemPosition,1)
-                    val dayData = mutableListOf<String>()
-                    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                    for (i in 1..maxDay){
-                        dayData.add(i.toString())
-                    }
-                    var currentDaySelected = dayWheelPicker.currentItemPosition
-                    if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                    dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                    dayWheelPicker.data = dayData
-                }
-            })
-            yearWheelFrameLayout.addView(yearWheelPicker, flParams)
-            yearWheelFrameLayout.post{
-                yearWheelPicker.setSelectedItemPosition((Integer.parseInt(etBalanceDateYear.text.toString()) ?: 2000)-2000)
-            }
-            val acceptBtn = dialog.btnDatePickerAdd
-            val cancelBtn = dialog.btnDatePickerCancel
-            acceptBtn.setOnClickListener {
-                val day = dayWheelPicker.currentItemPosition + 1
-                val month = monthWheelPicker.currentItemPosition + 1
-                val year = 2000 + yearWheelPicker.currentItemPosition
-                viewModel.setDateOfMovementInLayout(day,month,year)
-                dialog.dismiss()
-            }
-            cancelBtn.setOnClickListener { dialog.dismiss() }
-            dialog.show()
+            createDateDialog(etBalanceDateDay, etBalanceDateMonth, etBalanceDateYear, viewModel, WheelType.BALANCE_DATE_PICK, context!!)
         }
     }
 
-    fun closeAndClearNewMovementLayout(){
+    private fun closeAndClearNewMovementLayout(){
         closeNewBalanceMovementLayout()
         isNewBalance = true
         clearBalanceData()
@@ -233,8 +139,7 @@ class BalanceFragment : Fragment() {
 
             balanceMovementList.setOnItemLongClickListener  { _, _, pos, _ ->
                 val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(balance[pos].movementDate)
-                val dialog = AlertDialog.Builder(context)
-                dialog.apply {
+                AlertDialog.Builder(context).apply {
                     setMessage("Apagar o movimento de ${balance[pos].movementAmount} feito a $formattedDate?")
                     setCancelable(true)
                     setPositiveButton("Sim") { _, _ ->

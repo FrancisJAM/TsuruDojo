@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import francisco.alvim.newtsurudojo.data.WheelType
 import francisco.alvim.newtsurudojo.database.AppDatabase
 import francisco.alvim.newtsurudojo.entity.*
 import kotlinx.coroutines.*
@@ -519,6 +520,16 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
 
     fun updateMonthInTop() {
         setMonthPaymentInLayout(paymentsMonth, paymentsYear)
+    }
+
+    fun onDateWheelAccept(day: Int, month: Int, year: Int, wheelType: WheelType) {
+        when (wheelType) {
+            WheelType.BALANCE_DATE_PICK -> setDateOfMovementInLayout(day,month,year)
+            WheelType.EVENT_PAYMENTS_DATE_PICK -> setDateOfEventPaymentInLayout(day,month,year)
+            WheelType.EVENTS_DATE_PICK -> setDateOfEventInLayout(day,month,year)
+            WheelType.MONTH_PAYMENT_DATE_PICK -> setDateOfPaymentInLayout(day,month,year)
+            else -> {}
+        }
     }
 
 

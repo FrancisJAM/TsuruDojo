@@ -4,7 +4,6 @@ package francisco.alvim.newtsurudojo.fragment
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -12,12 +11,18 @@ import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.aigestudio.wheelpicker.WheelPicker
 
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.adapters.EventPaymentsAdapter
 import francisco.alvim.newtsurudojo.adapters.StudentsMissingInEventPaymentsAdapter
+import francisco.alvim.newtsurudojo.data.Constants.DAY_VALUES
+import francisco.alvim.newtsurudojo.data.Constants.FIRST_YEAR
+import francisco.alvim.newtsurudojo.data.Constants.MONTH_VALUES
+import francisco.alvim.newtsurudojo.data.Constants.YEAR_VALUES
+import francisco.alvim.newtsurudojo.data.Utils
+import francisco.alvim.newtsurudojo.data.Utils.createDateDialog
+import francisco.alvim.newtsurudojo.data.WheelType
 import francisco.alvim.newtsurudojo.entity.EventEntity
 import francisco.alvim.newtsurudojo.entity.EventPaymentEntity
 import kotlinx.android.synthetic.main.card_picker_student.view.*
@@ -25,7 +30,6 @@ import kotlinx.android.synthetic.main.date_picker_full.*
 import kotlinx.android.synthetic.main.fragment_event_payments.*
 import kotlinx.android.synthetic.main.student_picker.*
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -54,17 +58,19 @@ class EventPaymentsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewModel.currentEventPayments.observe(viewLifecycleOwner, Observer {
-            eventPaymentList.adapter = EventPaymentsAdapter(context!!,it, viewModel)
-            eventPaymentList.setOnItemClickListener { _, _, pos, _ ->
-                showEventPaymentForStudent(it[pos])
-                viewModel.currentEventPayment = it[pos]
-                isNewEventPayment = false
-                updateNewEventPaymentButton()
-            }
-            eventPaymentList.setOnItemLongClickListener { _, _, pos, _ ->
-                viewModel.onRemoveEventPaymentClick(it[pos])
-                true
+        viewModel.currentEventPayments.observe(viewLifecycleOwner, Observer { eventPayments ->
+            eventPaymentList.apply {
+                adapter = EventPaymentsAdapter(context!!, eventPayments, viewModel)
+                setOnItemClickListener { _, _, pos, _ ->
+                    showEventPaymentForStudent(eventPayments[pos])
+                    viewModel.currentEventPayment = eventPayments[pos]
+                    isNewEventPayment = false
+                    updateNewEventPaymentButton()
+                }
+                setOnItemLongClickListener { _, _, pos, _ ->
+                    viewModel.onRemoveEventPaymentClick(eventPayments[pos])
+                    true
+                }
             }
         })
 
@@ -96,33 +102,36 @@ class EventPaymentsFragment : Fragment() {
             eventPaymentsTotal.text = it
         })
         viewModel.studentsNotInEventPayment.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun){
-                val dialog = Dialog(context!!)
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-                dialog.setCancelable(false)
-                dialog.setContentView(R.layout.student_picker)
+            if (it.isFirstRun) {
+                Dialog(context!!).apply {
+                    requestWindowFeature(Window.FEATURE_NO_TITLE)
+                    setCancelable(false)
+                    setContentView(R.layout.student_picker)
 
-                val adapter = StudentsMissingInEventPaymentsAdapter(context!!,it.getContent(),viewModel)
-                val listView = dialog.studentPickerList
-                listView.adapter = adapter
-                listView.setOnItemClickListener { _, view, position, _ ->
-                    val selection = view.imgStudentPickerCardSelected
-                    if (selection.isActivated){
-                        viewModel.removeSelectedStudentNameInPicker(position)
-                    } else {
-                        viewModel.addSelectedStudentNameInPicker(position)
+                    studentPickerList.apply {
+                        adapter = StudentsMissingInEventPaymentsAdapter(
+                            context!!,
+                            it.getContent(),
+                            viewModel
+                        )
+                        setOnItemClickListener { _, view, position, _ ->
+                            val selection = view.imgStudentPickerCardSelected
+                            if (selection.isActivated) {
+                                viewModel.removeSelectedStudentNameInPicker(position)
+                            } else {
+                                viewModel.addSelectedStudentNameInPicker(position)
+                            }
+                            selection.isActivated = !selection.isActivated
+                        }
                     }
-                    selection.isActivated = !selection.isActivated
-                }
 
-                val acceptBtn = dialog.btnStudentPickerAdd
-                val cancelBtn = dialog.btnStudentPickerCancel
-                acceptBtn.setOnClickListener {
-                    viewModel.addAllSelectedStudentNames()
-                    dialog.dismiss()
+                    btnStudentPickerAdd.setOnClickListener {
+                        viewModel.addAllSelectedStudentNames()
+                        dismiss()
+                    }
+                    btnStudentPickerCancel.setOnClickListener { dismiss() }
+                    show()
                 }
-                cancelBtn.setOnClickListener { dialog.dismiss() }
-                dialog.show()
             }
         })
         viewModel.selectedNamesInPicker.observe(viewLifecycleOwner, Observer {
@@ -145,12 +154,14 @@ class EventPaymentsFragment : Fragment() {
             updateNewEventPaymentButton()
             closeKeyboard(it)
         }
+
         btnEventPaymentAdd.setOnClickListener {
             val name = etNewEventPaymentName.text.toString()
             if (name.isNotBlank()) viewModel.addNewEventPaymentStudent(name)
             clearPaymentData()
             closeKeyboard(it)
         }
+
         btnEventPaymentPay.setOnClickListener {
             val name = etNewEventPaymentName.text.toString()
             val paymentAmount = etNewEventPaymentDefaultPayment.text.toString().toDoubleOrNull() ?: 0.0
@@ -168,103 +179,7 @@ class EventPaymentsFragment : Fragment() {
             btnEventPaymentsPayed.setActivated(!btnEventPaymentsPayed.isActivated)
         }
         btnNewEventPaymentChooseDate.setOnClickListener {
-            val dialog = Dialog(context!!)
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-            dialog.setCancelable(false)
-            dialog.setContentView(R.layout.date_picker_full)
-            val dayWheelFrameLayout = dialog.datePickerDay
-            val monthWheelFrameLayout = dialog.datePickerMonth
-            val yearWheelFrameLayout = dialog.datePickerYear
-            val flParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            flParams.gravity = Gravity.CENTER
-
-            val dayWheelPicker = WheelPicker(context!!)
-            dayWheelPicker.setAtmospheric(true)
-            dayWheelPicker.visibleItemCount = 5
-            dayWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            dayWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val dayValues = mutableListOf<String>()
-            for (i in 1..31){
-                dayValues.add(i.toString())
-            }
-            dayWheelPicker.data = dayValues
-            dayWheelFrameLayout.addView(dayWheelPicker, flParams)
-            dayWheelFrameLayout.post{
-                dayWheelPicker.setSelectedItemPosition((Integer.parseInt(etNewEventPaymentDateDay.text.toString()) ?: 0)-1)
-            }
-
-            val monthWheelPicker = WheelPicker(context!!)
-            monthWheelPicker.setAtmospheric(true)
-            monthWheelPicker.visibleItemCount = 5
-            monthWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            monthWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val monthValues = mutableListOf<String>()
-            for (i in 1..12){
-                monthValues.add(i.toString())
-            }
-            monthWheelPicker.data = monthValues
-
-
-            val yearWheelPicker = WheelPicker(context!!)
-            yearWheelPicker.setAtmospheric(true)
-            yearWheelPicker.visibleItemCount = 5
-            yearWheelPicker.selectedItemTextColor = Color.parseColor("#000000")
-            yearWheelPicker.itemTextColor = Color.parseColor("#50BBBBBB")
-            val yearValues = mutableListOf<String>()
-            for (i in 2000..2050){
-                yearValues.add(i.toString())
-            }
-            yearWheelPicker.data = yearValues
-
-            monthWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                    val cal = Calendar.getInstance()
-                    cal.set(2000 + yearWheelPicker.currentItemPosition,pos,1)
-                    val dayData = mutableListOf<String>()
-                    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                    for (i in 1..maxDay){
-                        dayData.add(i.toString())
-                    }
-                    var currentDaySelected = dayWheelPicker.currentItemPosition
-                    if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                    dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                    dayWheelPicker.data = dayData
-                }
-            })
-            monthWheelFrameLayout.addView(monthWheelPicker, flParams)
-            monthWheelFrameLayout.post{
-                monthWheelPicker.setSelectedItemPosition((Integer.parseInt(etNewEventPaymentDateMonth.text.toString()) ?: 0)-1)
-            }
-            yearWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                    val cal = Calendar.getInstance()
-                    cal.set(2000 + pos,monthWheelPicker.currentItemPosition,1)
-                    val dayData = mutableListOf<String>()
-                    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                    for (i in 1..maxDay){
-                        dayData.add(i.toString())
-                    }
-                    var currentDaySelected = dayWheelPicker.currentItemPosition
-                    if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                    dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                    dayWheelPicker.data = dayData
-                }
-            })
-            yearWheelFrameLayout.addView(yearWheelPicker, flParams)
-            yearWheelFrameLayout.post{
-                yearWheelPicker.setSelectedItemPosition((Integer.parseInt(etNewEventPaymentDateYear.text.toString()) ?: 2000)-2000)
-            }
-            val acceptBtn = dialog.btnDatePickerAdd
-            val cancelBtn = dialog.btnDatePickerCancel
-            acceptBtn.setOnClickListener {
-                val day = dayWheelPicker.currentItemPosition + 1
-                val month = monthWheelPicker.currentItemPosition + 1
-                val year = 2000 + yearWheelPicker.currentItemPosition
-                viewModel.setDateOfEventPaymentInLayout(day,month,year)
-                dialog.dismiss()
-            }
-            cancelBtn.setOnClickListener { dialog.dismiss() }
-            dialog.show()
+            createDateDialog(etNewEventPaymentDateDay, etNewEventPaymentDateMonth, etNewEventPaymentDateYear, viewModel, WheelType.EVENT_PAYMENTS_DATE_PICK, context!!)
         }
         btnEventPaymentsBack.setOnClickListener {
             viewModel.onBackClick()
@@ -279,7 +194,6 @@ class EventPaymentsFragment : Fragment() {
 
         makeButtonPayEventPayment()
         etNewEventPaymentName.setText(eventPayment.studentName)
-
 
         val payment = if (eventPayment.paymentAmount == 0.0 && !eventPayment.payed) (currentEvent?.defaultPayment ?: 0.0) else eventPayment.paymentAmount
         val paymentFormatter = DecimalFormat("0.##")
@@ -326,7 +240,6 @@ class EventPaymentsFragment : Fragment() {
         etNewEventPaymentDateDay.setText(calendar.get(Calendar.DAY_OF_MONTH).toString())
         etNewEventPaymentDateMonth.setText((calendar.get(Calendar.MONTH) + 1).toString())
         etNewEventPaymentDateYear.setText(calendar.get(Calendar.YEAR).toString())
-
     }
 
     private fun updateNewEventPaymentButton(){

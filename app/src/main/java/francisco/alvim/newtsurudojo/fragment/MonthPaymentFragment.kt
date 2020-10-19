@@ -18,7 +18,11 @@ import com.aigestudio.wheelpicker.WheelPicker
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.adapters.MonthPaymentsAdapter
-import kotlinx.android.synthetic.main.date_picker_full.*
+import francisco.alvim.newtsurudojo.data.Constants.FIRST_YEAR
+import francisco.alvim.newtsurudojo.data.Constants.MONTH_VALUES
+import francisco.alvim.newtsurudojo.data.Constants.YEAR_VALUES
+import francisco.alvim.newtsurudojo.data.Utils.createDateDialog
+import francisco.alvim.newtsurudojo.data.WheelType
 import kotlinx.android.synthetic.main.date_picker_month.*
 import kotlinx.android.synthetic.main.fragment_month_payment.*
 import java.text.SimpleDateFormat
@@ -80,21 +84,21 @@ class MonthPaymentFragment : Fragment() {
                 setCancelable(false)
                 setContentView(R.layout.date_picker_month)
 
-                val monthWheelPicker = getDefaultWheelPicker(monthValues)
+                val monthWheelPicker = getDefaultWheelPicker(MONTH_VALUES)
                 monthDatePickerMonth.addView(monthWheelPicker, flParams)
                 monthDatePickerMonth.post {
                     monthWheelPicker.setSelectedItemPosition(Integer.parseInt(monthEditText.text.toString() ?: "1")-1)
                 }
 
-                val yearWheelPicker = getDefaultWheelPicker(yearValues)
+                val yearWheelPicker = getDefaultWheelPicker(YEAR_VALUES)
                 monthDatePickerYear.addView(yearWheelPicker, flParams)
                 monthDatePickerYear.post {
-                    yearWheelPicker.setSelectedItemPosition(Integer.parseInt(yearEditText.text.toString()) - 2000)
+                    yearWheelPicker.setSelectedItemPosition(Integer.parseInt(yearEditText.text.toString()) - FIRST_YEAR)
                 }
 
                 btnMonthDatePickerAdd.setOnClickListener {
                     val month = monthWheelPicker.currentItemPosition + 1
-                    val year = 2000 + yearWheelPicker.currentItemPosition
+                    val year = FIRST_YEAR + yearWheelPicker.currentItemPosition
                     viewModel.setMonthPaymentInLayout(month,year)
                     dismiss()
                 }
@@ -104,73 +108,10 @@ class MonthPaymentFragment : Fragment() {
         }
 
         btnNewMonthyPaymentChooseDate.setOnClickListener {
-            val dateDay = etNewMontlyPaymentDateDay
-            val dateMonth = etNewMontlyPaymentDateMonth
-            val dateYear = etNewMontlyPaymentDateYear
-            Dialog(context!!).apply {
-                requestWindowFeature(Window.FEATURE_NO_TITLE)
-                setCancelable(false)
-                setContentView(R.layout.date_picker_full)
-
-                val dayWheelPicker = getDefaultWheelPicker(dayValues)
-                val monthWheelPicker = getDefaultWheelPicker(monthValues)
-                val yearWheelPicker = getDefaultWheelPicker(yearValues)
-
-                datePickerDay.addView(dayWheelPicker, flParams)
-                datePickerDay.post{
-                    dayWheelPicker.setSelectedItemPosition((Integer.parseInt(dateDay.text.toString()) ?: 0)-1)
-                }
-
-                monthWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                    override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                        val cal = Calendar.getInstance()
-                        cal.set(2000 + yearWheelPicker.currentItemPosition,pos,1)
-                        val dayData = mutableListOf<String>()
-                        val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                        for (i in 1..maxDay){
-                            dayData.add(i.toString())
-                        }
-                        var currentDaySelected = dayWheelPicker.currentItemPosition
-                        if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                        dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                        dayWheelPicker.data = dayData
-                    }
-                })
-                datePickerMonth.addView(monthWheelPicker, flParams)
-                datePickerMonth.post{
-                    monthWheelPicker.setSelectedItemPosition((Integer.parseInt(dateMonth.text.toString()) ?: 0)-1)
-                }
-
-                yearWheelPicker.setOnItemSelectedListener(object: WheelPicker.OnItemSelectedListener{
-                    override fun onItemSelected(picker: WheelPicker?, data: Any?, pos: Int) {
-                        val cal = Calendar.getInstance()
-                        cal.set(2000 + pos,monthWheelPicker.currentItemPosition,1)
-                        val dayData = mutableListOf<String>()
-                        val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-                        for (i in 1..maxDay){
-                            dayData.add(i.toString())
-                        }
-                        var currentDaySelected = dayWheelPicker.currentItemPosition
-                        if (currentDaySelected > maxDay) currentDaySelected = maxDay - 1
-                        dayWheelPicker.setSelectedItemPosition(currentDaySelected)
-                        dayWheelPicker.data = dayData
-                    }
-                })
-                datePickerYear.addView(yearWheelPicker, flParams)
-                datePickerYear.post{
-                    yearWheelPicker.setSelectedItemPosition((Integer.parseInt(dateYear.text.toString()) ?: 2000)-2000)
-                }
-
-                btnDatePickerAdd.setOnClickListener {
-                    val day = dayWheelPicker.currentItemPosition + 1
-                    val month = monthWheelPicker.currentItemPosition + 1
-                    val year = 2000 + yearWheelPicker.currentItemPosition
-                    viewModel.setDateOfPaymentInLayout(day,month,year)
-                    dismiss()
-                }
-                btnDatePickerCancel.setOnClickListener { dismiss() }
-                show()
-            }
+            val dateDayET = etNewMontlyPaymentDateDay
+            val dateMonthET = etNewMontlyPaymentDateMonth
+            val dateYearET = etNewMontlyPaymentDateYear
+            createDateDialog(dateDayET, dateMonthET, dateYearET, viewModel, WheelType.MONTH_PAYMENT_DATE_PICK, context!!)
         }
     }
 
@@ -214,7 +155,7 @@ class MonthPaymentFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewModel.paymentsDoneInMonth.observe(this, Observer {
+        viewModel.paymentsDoneInMonth.observe(viewLifecycleOwner, Observer {
             monthPaymentList.adapter = MonthPaymentsAdapter(context!!,it, viewModel)
             monthPaymentList.setOnItemClickListener { _, _, pos, _ ->
                 showPaymentLayout()
@@ -229,34 +170,34 @@ class MonthPaymentFragment : Fragment() {
                 true
             }
         })
-        viewModel.newPaymentMonth.observe(this,Observer {
+        viewModel.newPaymentMonth.observe(viewLifecycleOwner,Observer {
             etNewMontlyPaymentMonth.setText(it.toString())
         })
-        viewModel.newPaymentYear.observe(this,Observer {
+        viewModel.newPaymentYear.observe(viewLifecycleOwner,Observer {
             etNewMontlyPaymentYear.setText(it.toString())
         })
-        viewModel.newPaymentDateDay.observe(this,Observer {
+        viewModel.newPaymentDateDay.observe(viewLifecycleOwner,Observer {
             etNewMontlyPaymentDateDay.setText(it.toString())
         })
-        viewModel.newPaymentDateMonth.observe(this,Observer {
+        viewModel.newPaymentDateMonth.observe(viewLifecycleOwner,Observer {
             etNewMontlyPaymentDateMonth.setText(it.toString())
         })
-        viewModel.newPaymentDateYear.observe(this,Observer {
+        viewModel.newPaymentDateYear.observe(viewLifecycleOwner,Observer {
             etNewMontlyPaymentDateYear.setText(it.toString())
         })
-        viewModel.newPaymentStudentsNames.observe(this,Observer {
+        viewModel.newPaymentStudentsNames.observe(viewLifecycleOwner,Observer {
             spinnerNewMontlyPaymentStudent.adapter = ArrayAdapter(context!!, android.R.layout.simple_spinner_item, it)
         })
-        viewModel.currentMonthAndYear.observe(this,Observer {
+        viewModel.currentMonthAndYear.observe(viewLifecycleOwner,Observer {
             monthPaymentMonthLabel.text = it
         })
-        viewModel.totalMonthPayment.observe(this,Observer {
+        viewModel.totalMonthPayment.observe(viewLifecycleOwner,Observer {
             monthPaymentMonthTotal.text = it
         })
-        viewModel.namePosition.observe(this,Observer {
+        viewModel.namePosition.observe(viewLifecycleOwner,Observer {
             spinnerNewMontlyPaymentStudent.setSelection(it)
         })
-        viewModel.removeMonthPaymentClick.observe(this,Observer {
+        viewModel.removeMonthPaymentClick.observe(viewLifecycleOwner,Observer {
             if (it.isFirstRun) {
                 val payment = it.getContent()
                 val dialog = AlertDialog.Builder(context)

@@ -4,7 +4,6 @@ package francisco.alvim.newtsurudojo.fragment
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -19,6 +18,9 @@ import com.aigestudio.wheelpicker.WheelPicker
 import francisco.alvim.newtsurudojo.R
 import francisco.alvim.newtsurudojo.TsuruDojoViewModel
 import francisco.alvim.newtsurudojo.adapters.StudentsAdapter
+import francisco.alvim.newtsurudojo.data.Constants.DAN
+import francisco.alvim.newtsurudojo.data.Constants.LEVEL_TYPES
+import francisco.alvim.newtsurudojo.data.Utils
 import francisco.alvim.newtsurudojo.entity.StudentEntity
 import kotlinx.android.synthetic.main.fragment_student.*
 import kotlinx.android.synthetic.main.level_picker.*
@@ -28,9 +30,6 @@ class StudentFragment : Fragment() {
     lateinit var viewModel: TsuruDojoViewModel
     private var newStudent = true
     lateinit var levelNumWheelPicker: WheelPicker
-
-    private val levelTypesValues = listOf("Kyu", "Dan")
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_student, container, false)
@@ -47,7 +46,7 @@ class StudentFragment : Fragment() {
 
     private fun setupUi() {
         newStudentLayout.visibility = View.GONE
-        val textWatcher = object :  TextWatcher {
+        val textWatcher = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -65,9 +64,9 @@ class StudentFragment : Fragment() {
 
     private fun setupObservers() {
 
-        viewModel.allStudents.observe(this, Observer {
+        viewModel.allStudents.observe(viewLifecycleOwner, Observer {
             studentList.adapter = StudentsAdapter(context!!,it, viewModel)
-            studentList.setOnItemClickListener { parent, v, pos, id ->
+            studentList.setOnItemClickListener { _,_, pos,_ ->
                 showNewStudentLayout()
                 btnNewStudentShow.setImageResource(R.drawable.ic_backup_gray)
                 btnNewStudentShow.rotation = 0F
@@ -87,13 +86,13 @@ class StudentFragment : Fragment() {
                 true
             }
         })
-        viewModel.newStudentLevelNum.observe(this, Observer {
+        viewModel.newStudentLevelNum.observe(viewLifecycleOwner, Observer {
             etNewStudentLevelNum.setText(it.toString())
         })
-        viewModel.newStudentLevelType.observe(this, Observer {
+        viewModel.newStudentLevelType.observe(viewLifecycleOwner, Observer {
             etNewStudentLevelType.setText(it)
         })
-        viewModel.removeStudentClick.observe(this, Observer {
+        viewModel.removeStudentClick.observe(viewLifecycleOwner, Observer {
             if (it.isFirstRun) {
                 val student = it.getContent()
                 val dialog = AlertDialog.Builder(context)
@@ -153,31 +152,25 @@ class StudentFragment : Fragment() {
             flParams.gravity = Gravity.CENTER
 
             val levelNumWheelFrameLayout = dialog.levelPickerNum
-            val levelType = etNewStudentLevelType.text.toString()
-            val isDan = levelType == "Dan"
-            val levelNum = etNewStudentLevelNum.text.toString().toIntOrNull()
+            val levelNum = (etNewStudentLevelNum.text.toString().toIntOrNull() ?: if (isDan()) 1 else 10) - 1
 
-            addLevelNumPicker(levelNumWheelFrameLayout, isDan, levelNum)
+            addLevelNumPicker(levelNumWheelFrameLayout, isDan(), levelNum)
 
-            val levelTypeWheelPicker = addLevelTypePicker()
+            val levelTypeWheelPicker = Utils.createWheelPicker(LEVEL_TYPES, context!!)
             val levelTypeWheelFrameLayout = dialog.levelPickerType
 
             levelTypeWheelFrameLayout.addView(levelTypeWheelPicker, flParams)
-            levelTypeWheelPicker.setOnWheelChangeListener(object: WheelPicker.OnWheelChangeListener{
-                override fun onWheelSelected(pos: Int) {
-                    remakeLevelNumPicker(levelNumWheelFrameLayout, pos==1)
-                }
-                override fun onWheelScrollStateChanged(state: Int) {}
-                override fun onWheelScrolled(offset: Int) {}
-            })
+            levelTypeWheelPicker.setOnItemSelectedListener { _, _, pos ->
+                remakeLevelNumPicker(levelNumWheelFrameLayout, pos==1)
+            }
             levelTypeWheelFrameLayout.post{
-                levelTypeWheelPicker.setSelectedItemPosition(if (etNewStudentLevelType.text.toString() == "Dan") 1 else 0)
+                levelTypeWheelPicker.setSelectedItemPosition(if (isDan()) 1 else 0)
             }
 
             val acceptBtn = dialog.btnlevelPickerAdd
             acceptBtn.setOnClickListener {
-                val type = levelTypesValues[levelTypeWheelPicker.currentItemPosition]
-                val levelNumValues = getLevelNumValues(levelTypeWheelPicker.currentItemPosition == 1)
+                val type = LEVEL_TYPES[levelTypeWheelPicker.currentItemPosition]
+                val levelNumValues = Utils.getLevelNumValues(levelTypeWheelPicker.currentItemPosition == 1)
                 val level = levelNumValues[levelNumWheelPicker.currentItemPosition]
                 viewModel.setNewStudentLevelLayout(Integer.parseInt(level), type)
                 dialog.dismiss()
@@ -187,6 +180,10 @@ class StudentFragment : Fragment() {
             cancelBtn.setOnClickListener { dialog.dismiss() }
             dialog.show()
         }
+    }
+
+    private fun isDan(): Boolean {
+        return etNewStudentLevelType.text.toString() == DAN
     }
 
     private fun getStudentDataInLayout(): StudentEntity {
@@ -209,14 +206,8 @@ class StudentFragment : Fragment() {
         val flParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         flParams.gravity = Gravity.CENTER
 
-        val newLevelNumWheelPicker = WheelPicker(context!!).apply {
-            setAtmospheric(true)
-            visibleItemCount = 5
-            selectedItemTextColor = Color.parseColor("#000000")
-            itemTextColor = Color.parseColor("#50BBBBBB")
-            val levelNumValues = getLevelNumValues(isDan)
-            data = levelNumValues
-        }
+        val levelNumValues = Utils.getLevelNumValues(isDan)
+        val newLevelNumWheelPicker = Utils.createWheelPicker(levelNumValues,context!!)
         levelNumWheelFrameLayout.addView(newLevelNumWheelPicker, flParams)
         levelNumWheelFrameLayout.post{
             newLevelNumWheelPicker.setSelectedItemPosition(
@@ -228,30 +219,6 @@ class StudentFragment : Fragment() {
             )
         }
         levelNumWheelPicker = newLevelNumWheelPicker
-    }
-
-    private fun addLevelTypePicker() : WheelPicker {
-        return WheelPicker(context!!).apply {
-            setAtmospheric(true)
-            visibleItemCount = 5
-            selectedItemTextColor = Color.parseColor("#000000")
-            itemTextColor = Color.parseColor("#50BBBBBB")
-            data = levelTypesValues
-        }
-    }
-
-    private fun getLevelNumValues(isDan: Boolean): MutableList<String>{
-        val levelNumValues = mutableListOf<String>()
-        if (isDan) {
-            for (i in 1..15) {
-                levelNumValues.add(i.toString())
-            }
-        } else {
-            for (i in 10 downTo 1) {
-                levelNumValues.add(i.toString())
-            }
-        }
-        return levelNumValues
     }
 
     private fun updateNewStudentButton() {
@@ -314,3 +281,4 @@ class StudentFragment : Fragment() {
     }
 
 }
+
