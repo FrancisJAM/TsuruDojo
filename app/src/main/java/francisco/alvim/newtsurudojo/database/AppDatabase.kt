@@ -58,7 +58,7 @@ abstract class AppDatabase : RoomDatabase(){
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.beginTransaction()
                 try {
-                    database.execSQL("CREATE TABLE `studentNotes` (`id` INTEGER, `studentId` INTEGER NOT NULL, `studentNote` TEXT NOT NULL, PRIMARY KEY(`id`))")
+                    database.execSQL("CREATE TABLE `studentNotes` (`id` INTEGER, `studentId` INTEGER, `studentNote` TEXT, PRIMARY KEY(`id`))")
                     database.setTransactionSuccessful()
                 } finally {
                     database.endTransaction()
