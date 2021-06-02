@@ -14,7 +14,6 @@
     <string name="evento">Evento</string>
     <string name="nome">Nome</string>
     <string name="pagamento">Pagamento</string>
-    <string name="euro">€</string>
     <string name="data">Data</string>
     <string name="barra">/</string>
     <string name="pago">Pago</string>
@@ -26,4 +25,11 @@
     <string name="aluno">Aluno</string>
     <string name="recorrente">Recorrentes</string>
     <string name="mudar">Mudar</string>
+    <string name="comentarios">Comentários</string>
+    <string name="comentario">Comentário</string>
+    <string name="treina">Treina</string>
+    <string name="euro">€</string>
+    <string name="nivel">º</string>
+    <string name="graducao">Graduação</string>
+    <string name="contacto">Contacto</string>
 </resources>

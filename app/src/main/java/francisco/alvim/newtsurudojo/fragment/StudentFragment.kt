@@ -101,6 +101,11 @@ class StudentFragment : Fragment() {
                     setCancelable(true)
                     setPositiveButton("Sim") { _, _ ->
                         viewModel.removeStudent(student)
+                        viewModel.removeStudentNotesOfStudent(student)
+                        clearNewStudentData()
+                        hideNewStudentLayout()
+                        newStudent = true
+                        updateNewStudentButton()
                     }
                     setNegativeButton("Não") { _, _ -> }
                     show()
@@ -111,6 +116,9 @@ class StudentFragment : Fragment() {
     }
 
     private fun setupButtons() {
+        btnStudentCheckNotes.setOnClickListener {
+            if (!newStudent) viewModel.checkStudentNotesClick()
+        }
         btnNewStudentShow.setOnClickListener {
             if (newStudent) hideOrShowStudentLayout()
             newStudent = true
@@ -124,7 +132,7 @@ class StudentFragment : Fragment() {
             if (!newStudent) makeButtonChangeStudent()
         }
         btnStudentChange.setOnClickListener {
-            val studentEntity = getStudentDataInLayout()
+            val studentEntity = getStudentDataInLayout() ?: return@setOnClickListener
             viewModel.updateTheStudent(studentEntity)
             clearNewStudentData()
             hideNewStudentLayout()
@@ -133,7 +141,7 @@ class StudentFragment : Fragment() {
             closeKeyboard(it)
         }
         btnStudentAdd.setOnClickListener {
-            val newStudentEntity = getStudentDataInLayout()
+            val newStudentEntity = getStudentDataInLayout() ?: return@setOnClickListener
             viewModel.addNewStudent(newStudentEntity)
             clearNewStudentData()
             hideNewStudentLayout()
@@ -186,7 +194,7 @@ class StudentFragment : Fragment() {
         return etNewStudentLevelType.text.toString() == DAN
     }
 
-    private fun getStudentDataInLayout(): StudentEntity {
+    private fun getStudentDataInLayout(): StudentEntity? {
         val defaultPayment = etNewStudentDefaultPayment.text.toString().toIntOrNull() ?: 0
         val newStudentName = etNewStudentName.text.toString()
         val newStudentContract = etNewStudentContact.text.toString()
@@ -194,6 +202,7 @@ class StudentFragment : Fragment() {
         val newStudentLevelType = etNewStudentLevelType.text.toString()
         val newStudentLevel = "$newStudentLevelNum-$newStudentLevelType"
         val newStudentTrains = btnStudentsTrains.isActivated
+        if (arrayOf(newStudentName, newStudentLevelNum, newStudentLevelType).contains("")) return null
         return StudentEntity(null,newStudentName,newStudentLevel,newStudentContract,newStudentTrains,defaultPayment)
     }
 
@@ -250,16 +259,19 @@ class StudentFragment : Fragment() {
     private fun makeButtonNewStudent() {
         btnStudentAdd.visibility = View.VISIBLE
         btnStudentChange.visibility = View.GONE
+        btnStudentCheckNotes.visibility = View.GONE
     }
 
     private fun makeButtonChangeStudent() {
         btnStudentAdd.visibility = View.GONE
         btnStudentChange.visibility = View.VISIBLE
+        btnStudentCheckNotes.visibility = View.VISIBLE
     }
 
     private fun hideAllNewStudentButtons() {
         btnStudentAdd.visibility = View.GONE
         btnStudentChange.visibility = View.GONE
+        btnStudentCheckNotes.visibility = View.VISIBLE
     }
 
     private fun hideOrShowStudentLayout() {

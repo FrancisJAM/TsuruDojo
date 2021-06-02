@@ -21,7 +21,7 @@ class TsuruDojoActivity : AppCompatActivity() {
         /**
          * init database, so as to build it if it is not existing yet.
          */
-        val database = AppDatabase.invoke(applicationContext)
+        AppDatabase.invoke(applicationContext)
         supportFragmentManager.beginTransaction().replace(mainFragment.id,MonthPaymentFragment()).commitAllowingStateLoss()
         btnSectionPayments.setActivated(true)
         btnSectionEvents.setActivated(false)
@@ -35,6 +35,11 @@ class TsuruDojoActivity : AppCompatActivity() {
         viewModel.openEventPage.observe(this, Observer {
             if (it.isFirstRun){
                 supportFragmentManager.beginTransaction().replace(mainFragment.id, EventPaymentsFragment()).commitAllowingStateLoss()
+            }
+        })
+        viewModel.openStudentNotes.observe(this, Observer {
+            if (it.isFirstRun){
+                supportFragmentManager.beginTransaction().replace(mainFragment.id, StudentNotesFragment()).commitAllowingStateLoss()
             }
         })
         viewModel.onbackClick.observe(this, Observer {
@@ -78,10 +83,16 @@ class TsuruDojoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         val fragment = supportFragmentManager.findFragmentById(R.id.mainFragment)
-        if (fragment is EventPaymentsFragment){
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,EventsFragment()).commitAllowingStateLoss()
-        } else {
-            super.onBackPressed()
+        when (fragment) {
+            is EventPaymentsFragment -> {
+                supportFragmentManager.beginTransaction().replace(mainFragment.id,EventsFragment()).commitAllowingStateLoss()
+            }
+            is StudentNotesFragment -> {
+                supportFragmentManager.beginTransaction().replace(mainFragment.id,StudentFragment()).commitAllowingStateLoss()
+            }
+            else -> {
+                super.onBackPressed()
+            }
         }
     }
 }

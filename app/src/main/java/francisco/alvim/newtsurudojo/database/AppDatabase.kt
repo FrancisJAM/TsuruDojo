@@ -12,8 +12,9 @@ import francisco.alvim.newtsurudojo.dao.*
 import francisco.alvim.newtsurudojo.entity.*
 import java.lang.Exception
 
-@Database( version = 2, entities = arrayOf(
+@Database( version = 3, entities = arrayOf(
         StudentEntity::class,
+        StudentNotesEntity::class,
         EventEntity::class,
         EventPaymentEntity::class,
         MonthPaymentEntity::class,
@@ -21,6 +22,7 @@ import java.lang.Exception
 ))
 abstract class AppDatabase : RoomDatabase(){
     abstract fun studentDao() : StudentDao
+    abstract fun studentNotesDao() : StudentNotesDao
     abstract fun monthPaymentDao() : MonthPaymentDao
     abstract fun eventsDao() : EventsDao
     abstract fun eventPaymentsDao() : EventsPaymentsDao
@@ -31,14 +33,13 @@ abstract class AppDatabase : RoomDatabase(){
         private val LOCK = Any()
 
         operator fun invoke(context: Context) = instance ?: synchronized(LOCK){
-            instance ?: buildDatabase(context)
-
-                .also { instance = it}
+            instance ?: buildDatabase(context).also { instance = it}
         }
 
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(context, AppDatabase::class.java, "tsuru-dojo.db")
                 .addMigrations(MIGRATION2)
+                .addMigrations(MIGRATION3)
                 .build()
 
 
@@ -47,6 +48,17 @@ abstract class AppDatabase : RoomDatabase(){
                 database.beginTransaction()
                 try {
                     database.execSQL("CREATE TABLE `balancePayment` (`id` INTEGER, `movementMonth` INTEGER NOT NULL, `movementYear` INTEGER NOT NULL, `movementAmount` REAL NOT NULL, `movementDate` INTEGER NOT NULL, `movementName` TEXT NOT NULL, PRIMARY KEY(`id`))")
+                    database.setTransactionSuccessful()
+                } finally {
+                    database.endTransaction()
+                }
+            }
+        }
+        private val MIGRATION3 = object : Migration(2,3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.beginTransaction()
+                try {
+                    database.execSQL("CREATE TABLE `studentNotes` (`id` INTEGER, `studentId` INTEGER NOT NULL, `studentNote` TEXT NOT NULL, PRIMARY KEY(`id`))")
                     database.setTransactionSuccessful()
                 } finally {
                     database.endTransaction()
