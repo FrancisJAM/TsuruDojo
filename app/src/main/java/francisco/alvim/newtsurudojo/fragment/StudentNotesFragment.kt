@@ -9,6 +9,7 @@ import android.text.TextWatcher
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 
@@ -19,12 +20,11 @@ import kotlinx.android.synthetic.main.fragment_student_notes.*
 
 class StudentNotesFragment : Fragment() {
 
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
     private var newStudentNote = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_student_notes, container, false)
-        viewModel = activity?.let { ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
         return view
     }
 
@@ -55,7 +55,7 @@ class StudentNotesFragment : Fragment() {
             lblStudentNotesStudentName.text = it
         })
         viewModel.allNotesOfStudent.observe(viewLifecycleOwner, Observer {
-            studentNotesList.adapter = StudentNotesAdapter(context!!,it, viewModel)
+            studentNotesList.adapter = StudentNotesAdapter(requireContext(),it, viewModel)
             studentNotesList.setOnItemClickListener { _,_, pos,_ ->
                 showNewStudentNotesLayout()
                 btnNewStudentNoteShow.setImageResource(R.drawable.ic_backup_gray)
@@ -71,7 +71,7 @@ class StudentNotesFragment : Fragment() {
             }
         })
         viewModel.removeStudentNoteClick.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 val studentNote = it.getContent()
                 val dialog = AlertDialog.Builder(context)
                 dialog.apply {

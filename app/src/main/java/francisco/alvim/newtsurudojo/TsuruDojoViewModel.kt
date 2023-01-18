@@ -3,12 +3,17 @@ package francisco.alvim.newtsurudojo
 import android.app.Application
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import francisco.alvim.newtsurudojo.data.WheelType
 import francisco.alvim.newtsurudojo.database.AppDatabase
 import francisco.alvim.newtsurudojo.entity.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import java.text.DecimalFormat
 import java.util.*
 
@@ -58,7 +63,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     val newMovementDateYear = MutableLiveData<Int>()
     val openEventPage = MutableLiveData<Event<Unit>>()
     val openStudentNotes = MutableLiveData<Event<Unit>>()
-    val onbackClick = MutableLiveData<Event<Unit>>()
+    val onBackClick = MutableLiveData<Event<Unit>>()
 
     var currentStudent = StudentEntity(null,"","","",true,35)
     var currentStudentNote = StudentNotesEntity(null,null,"")
@@ -76,8 +81,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
 
     init {
         ioScope.launch {
-            val studentList = database.studentDao().getAllStudents()
-
+            val studentList = database.studentDao().getAllStudents().sortedBy { it.studentName }
             studentList.forEach {
                 arrangedNameList.add(it.studentName ?: "")
             }
@@ -121,7 +125,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
             }
             paymentsInMonth.clear()
             paymentsInMonth.addAll(paymentList)
-            Handler(Looper.getMainLooper()).post{
+            viewModelScope.launch {
                 paymentsDoneInMonth.value = paymentsInMonth
                 totalMonthPayment.value = "Total mês: " + DecimalFormat("0.##").format(totalInMonth) + "€"
             }
@@ -325,11 +329,12 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         getStudentNotes(currentStudent.id ?: return)
         getStudentNameOfStudentNotes(currentStudent.id ?: return)
     }
+
     fun getStudentNameOfStudentNotes(studentId: Int) {
         ioScope.launch {
             val student = database.studentDao().getStudentById(studentId)
             Handler(Looper.getMainLooper()).post {
-                studentNameOfStudentNotes.value = student.studentName
+                studentNameOfStudentNotes.value = student.studentName ?: ""
             }
         }
     }
@@ -580,7 +585,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
 
 
     fun onBackClick() {
-        onbackClick.value = Event(Unit)
+        onBackClick.value = Event(Unit)
     }
 
     fun addSelectedStudentNameInPicker(clickedPosition: Int) {

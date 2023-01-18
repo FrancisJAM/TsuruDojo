@@ -2,6 +2,7 @@ package francisco.alvim.newtsurudojo.dao
 
 import androidx.room.*
 import francisco.alvim.newtsurudojo.entity.MonthPaymentEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MonthPaymentDao {

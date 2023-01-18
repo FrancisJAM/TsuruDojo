@@ -14,6 +14,10 @@ open class Event<out T>(private val content: T) {
         }
         private set // Allow external read but not write
 
+    fun onFirstRun(function: () -> Unit) {
+        if(isFirstRun)  function()
+    }
+
     /**
      * Returns the content, even if it's already been handled.
      */

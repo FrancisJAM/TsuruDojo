@@ -11,6 +11,7 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.aigestudio.wheelpicker.WheelPicker
@@ -27,13 +28,12 @@ import kotlinx.android.synthetic.main.level_picker.*
 
 class StudentFragment : Fragment() {
 
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
     private var newStudent = true
     lateinit var levelNumWheelPicker: WheelPicker
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_student, container, false)
-        viewModel = activity?.let { ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
         return view
     }
 
@@ -65,7 +65,7 @@ class StudentFragment : Fragment() {
     private fun setupObservers() {
 
         viewModel.allStudents.observe(viewLifecycleOwner, Observer {
-            studentList.adapter = StudentsAdapter(context!!,it, viewModel)
+            studentList.adapter = StudentsAdapter(requireContext(),it, viewModel)
             studentList.setOnItemClickListener { _,_, pos,_ ->
                 showNewStudentLayout()
                 btnNewStudentShow.setImageResource(R.drawable.ic_backup_gray)
@@ -93,7 +93,7 @@ class StudentFragment : Fragment() {
             etNewStudentLevelType.setText(it)
         })
         viewModel.removeStudentClick.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 val student = it.getContent()
                 val dialog = AlertDialog.Builder(context)
                 dialog.apply {
@@ -151,7 +151,7 @@ class StudentFragment : Fragment() {
         }
 
         btnStudentLevel.setOnClickListener {
-            val dialog = Dialog(context!!)
+            val dialog = Dialog(requireContext())
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
             dialog.setCancelable(false)
             dialog.setContentView(R.layout.level_picker)
@@ -164,7 +164,7 @@ class StudentFragment : Fragment() {
 
             addLevelNumPicker(levelNumWheelFrameLayout, isDan(), levelNum)
 
-            val levelTypeWheelPicker = Utils.createWheelPicker(LEVEL_TYPES, context!!)
+            val levelTypeWheelPicker = Utils.createWheelPicker(LEVEL_TYPES, requireContext())
             val levelTypeWheelFrameLayout = dialog.levelPickerType
 
             levelTypeWheelFrameLayout.addView(levelTypeWheelPicker, flParams)
@@ -216,7 +216,7 @@ class StudentFragment : Fragment() {
         flParams.gravity = Gravity.CENTER
 
         val levelNumValues = Utils.getLevelNumValues(isDan)
-        val newLevelNumWheelPicker = Utils.createWheelPicker(levelNumValues,context!!)
+        val newLevelNumWheelPicker = Utils.createWheelPicker(levelNumValues,requireContext())
         levelNumWheelFrameLayout.addView(newLevelNumWheelPicker, flParams)
         levelNumWheelFrameLayout.post{
             newLevelNumWheelPicker.setSelectedItemPosition(

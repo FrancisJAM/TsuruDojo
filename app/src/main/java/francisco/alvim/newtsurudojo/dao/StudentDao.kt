@@ -2,6 +2,7 @@ package francisco.alvim.newtsurudojo.dao
 
 import androidx.room.*
 import francisco.alvim.newtsurudojo.entity.StudentEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudentDao {

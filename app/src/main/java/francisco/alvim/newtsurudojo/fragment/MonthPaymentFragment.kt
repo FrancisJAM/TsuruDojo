@@ -11,6 +11,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.aigestudio.wheelpicker.WheelPicker
@@ -30,7 +31,7 @@ import java.util.*
 
 class MonthPaymentFragment : Fragment() {
 
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
     private val dayValues = mutableListOf<String>().apply { for (i in 1..31) add(i.toString()) }
     private val monthValues = mutableListOf<String>().apply { for (i in 1..12) add(i.toString()) }
     private val yearValues = mutableListOf<String>().apply { for (i in 2000..2050) add(i.toString()) }
@@ -38,7 +39,6 @@ class MonthPaymentFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_month_payment, container, false)
-        viewModel = activity?.let {ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
         return view
     }
 
@@ -79,7 +79,7 @@ class MonthPaymentFragment : Fragment() {
         btnNewMonthyPaymentChooseMonth.setOnClickListener {
             val monthEditText = etNewMontlyPaymentMonth
             val yearEditText = etNewMontlyPaymentYear
-            Dialog(context!!).apply{
+            Dialog(requireContext()).apply{
                 requestWindowFeature(Window.FEATURE_NO_TITLE)
                 setCancelable(false)
                 setContentView(R.layout.date_picker_month)
@@ -111,12 +111,12 @@ class MonthPaymentFragment : Fragment() {
             val dateDayET = etNewMontlyPaymentDateDay
             val dateMonthET = etNewMontlyPaymentDateMonth
             val dateYearET = etNewMontlyPaymentDateYear
-            createDateDialog(dateDayET, dateMonthET, dateYearET, viewModel, WheelType.MONTH_PAYMENT_DATE_PICK, context!!)
+            createDateDialog(dateDayET, dateMonthET, dateYearET, viewModel, WheelType.MONTH_PAYMENT_DATE_PICK, requireContext())
         }
     }
 
     private fun getDefaultWheelPicker(dataValues: List<String>) : WheelPicker{
-        return WheelPicker(context!!).apply {
+        return WheelPicker(requireContext()).apply {
             setAtmospheric(true)
             visibleItemCount = 5
             selectedItemTextColor = Color.parseColor("#000000")
@@ -145,7 +145,7 @@ class MonthPaymentFragment : Fragment() {
     }
 
     private fun setupUi() {
-        spinnerNewMontlyPaymentStudent.adapter = ArrayAdapter(context!!, android.R.layout.simple_spinner_item, arrayListOf("test","test2"))
+        spinnerNewMontlyPaymentStudent.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, arrayListOf("test","test2"))
         val cal = Calendar.getInstance()
         etNewMontlyPaymentDateDay.setText(cal.get(Calendar.DAY_OF_MONTH).toString())
         etNewMontlyPaymentDateMonth.setText((cal.get(Calendar.MONTH)+1).toString())
@@ -156,7 +156,7 @@ class MonthPaymentFragment : Fragment() {
 
     private fun setupObservers() {
         viewModel.paymentsDoneInMonth.observe(viewLifecycleOwner, Observer {
-            monthPaymentList.adapter = MonthPaymentsAdapter(context!!,it, viewModel)
+            monthPaymentList.adapter = MonthPaymentsAdapter(requireContext(),it, viewModel)
             monthPaymentList.setOnItemClickListener { _, _, pos, _ ->
                 showPaymentLayout()
                 etNewMontlyPaymentAmount.setText((it[pos].first.defaultPayment)?.toString())
@@ -186,7 +186,7 @@ class MonthPaymentFragment : Fragment() {
             etNewMontlyPaymentDateYear.setText(it.toString())
         })
         viewModel.newPaymentStudentsNames.observe(viewLifecycleOwner,Observer {
-            spinnerNewMontlyPaymentStudent.adapter = ArrayAdapter(context!!, android.R.layout.simple_spinner_item, it)
+            spinnerNewMontlyPaymentStudent.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, it)
         })
         viewModel.currentMonthAndYear.observe(viewLifecycleOwner,Observer {
             monthPaymentMonthLabel.text = it
@@ -198,7 +198,7 @@ class MonthPaymentFragment : Fragment() {
             spinnerNewMontlyPaymentStudent.setSelection(it)
         })
         viewModel.removeMonthPaymentClick.observe(viewLifecycleOwner,Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 val payment = it.getContent()
                 val dialog = AlertDialog.Builder(context)
                 val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(payment.paymentDate)
