@@ -1,87 +1,111 @@
 package francisco.alvim.tsuru.dojo.activity
 
 import android.os.Bundle
+import android.widget.ImageButton
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import francisco.alvim.tsuru.dojo.R
 import francisco.alvim.tsuru.dojo.TsuruDojoViewModel
+import francisco.alvim.tsuru.dojo.data.NavigationButton
 import francisco.alvim.tsuru.dojo.database.AppDatabase
 import francisco.alvim.tsuru.dojo.fragment.*
 import kotlinx.android.synthetic.main.activity_tsuru_dojo.*
 
 class TsuruDojoActivity : AppCompatActivity() {
 
-    lateinit var viewModel: TsuruDojoViewModel
+    private val viewModel: TsuruDojoViewModel by viewModels()
+    private val navigationButtons by lazy {
+        listOf<Pair<NavigationButton, ImageButton>>(
+            Pair(NavigationButton.MONTHLY_PAYMENTS, btnSectionPayments),
+            Pair(NavigationButton.STUDENTS, btnSectionStudents),
+            Pair(NavigationButton.EVENTS, btnSectionEvents),
+            Pair(NavigationButton.BALANCE, btnSectionBalance)
+        )
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tsuru_dojo)
-        viewModel = ViewModelProviders.of(this).get(TsuruDojoViewModel::class.java)
         /**
          * init database, so as to build it if it is not existing yet.
          */
-        val database = AppDatabase.invoke(applicationContext)
-        supportFragmentManager.beginTransaction().replace(mainFragment.id,MonthPaymentFragment()).commitAllowingStateLoss()
-        btnSectionPayments.setActivated(true)
-        btnSectionEvents.setActivated(false)
-        btnSectionStudents.setActivated(false)
-        btnSectionBalance.setActivated(false)
+        AppDatabase.invoke(applicationContext)
+        goToNavigation(NavigationButton.MONTHLY_PAYMENTS)
         setupButtons()
         setupObservers()
     }
 
     private fun setupObservers() {
-        viewModel.openEventPage.observe(this, Observer {
-            if (it.isFirstRun){
-                supportFragmentManager.beginTransaction().replace(mainFragment.id, EventPaymentsFragment()).commitAllowingStateLoss()
-            }
-        })
-        viewModel.onbackClick.observe(this, Observer {
-            if (it.isFirstRun){
-                onBackPressed()
-            }
-        })
+        viewModel.apply{
+            openEventPage.observe(this@TsuruDojoActivity, Observer {
+                it.onFirstRun { openFragment(EventPaymentsFragment()) }
+            })
+            openStudentNotes.observe(this@TsuruDojoActivity, Observer {
+                it.onFirstRun { openFragment(StudentNotesFragment()) }
+            })
+            onBackClick.observe(this@TsuruDojoActivity, Observer {
+                it.onFirstRun { onBackPressed() }
+            })
+        }
     }
 
     private fun setupButtons(){
         btnSectionPayments.setOnClickListener {
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,MonthPaymentFragment()).commitAllowingStateLoss()
-            btnSectionPayments.setActivated(true)
-            btnSectionEvents.setActivated(false)
-            btnSectionStudents.setActivated(false)
-            btnSectionBalance.setActivated(false)
+            goToNavigation(NavigationButton.MONTHLY_PAYMENTS)
             viewModel.updateSpinnerNames()
         }
-        btnSectionEvents.setOnClickListener {
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,EventsFragment()).commitAllowingStateLoss()
-            btnSectionPayments.setActivated(false)
-            btnSectionEvents.setActivated(true)
-            btnSectionStudents.setActivated(false)
-            btnSectionBalance.setActivated(false)
-        }
         btnSectionStudents.setOnClickListener {
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,StudentFragment()).commitAllowingStateLoss()
-            btnSectionPayments.setActivated(false)
-            btnSectionEvents.setActivated(false)
-            btnSectionStudents.setActivated(true)
-            btnSectionBalance.setActivated(false)
+            goToNavigation(NavigationButton.STUDENTS)
+        }
+        btnSectionEvents.setOnClickListener {
+            goToNavigation(NavigationButton.EVENTS)
         }
         btnSectionBalance.setOnClickListener {
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,BalanceFragment()).commitAllowingStateLoss()
-            btnSectionPayments.setActivated(false)
-            btnSectionEvents.setActivated(false)
-            btnSectionStudents.setActivated(false)
-            btnSectionBalance.setActivated(true)
+            goToNavigation(NavigationButton.BALANCE)
         }
     }
 
     override fun onBackPressed() {
-        val fragment = supportFragmentManager.findFragmentById(R.id.mainFragment)
-        if (fragment is EventPaymentsFragment){
-            supportFragmentManager.beginTransaction().replace(mainFragment.id,EventsFragment()).commitAllowingStateLoss()
-        } else {
-            super.onBackPressed()
+        when (supportFragmentManager.findFragmentById(R.id.mainFragment)) {
+            is EventPaymentsFragment -> {
+                openFragment(EventsFragment())
+            }
+
+            is StudentNotesFragment -> {
+                openFragment(StudentFragment())
+            }
+
+            else -> {
+                super.onBackPressed()
+            }
         }
     }
+
+
+    private fun goToNavigation(navigation: NavigationButton){
+        val fragment = when(navigation) {
+            NavigationButton.MONTHLY_PAYMENTS -> MonthPaymentFragment()
+            NavigationButton.STUDENTS -> StudentFragment()
+            NavigationButton.EVENTS -> EventsFragment()
+            NavigationButton.BALANCE -> BalanceFragment()
+        }
+        openFragment(fragment)
+        selectNavigationSelection(navigation)
+    }
+
+    private fun selectNavigationSelection(navigation: NavigationButton){
+        navigationButtons.forEach {
+            it.second.setActivated(it.first == navigation)
+        }
+    }
+
+    private fun openFragment(fragment: Fragment) {
+        supportFragmentManager.commit(true) { replace(mainFragment.id, fragment) }
+    }
+
 }

@@ -8,6 +8,7 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import francisco.alvim.tsuru.dojo.R
@@ -26,13 +27,11 @@ import kotlin.math.abs
 
 class BalanceFragment : Fragment() {
 
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
     private var isNewBalance = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_balance, container, false)
-        viewModel = activity?.let { ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
-        return view
+        return inflater.inflate(R.layout.fragment_balance, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -97,7 +96,8 @@ class BalanceFragment : Fragment() {
         }
 
         btnBalanceChooseDate.setOnClickListener {
-            createDateDialog(etBalanceDateDay, etBalanceDateMonth, etBalanceDateYear, viewModel, WheelType.BALANCE_DATE_PICK, context!!)
+            createDateDialog(etBalanceDateDay, etBalanceDateMonth, etBalanceDateYear, viewModel, WheelType.BALANCE_DATE_PICK, requireContext())
+
         }
     }
 
@@ -111,7 +111,7 @@ class BalanceFragment : Fragment() {
 
     private fun setupObservers() {
         viewModel.allBalanceMovements.observe(viewLifecycleOwner, Observer {balance ->
-            balanceMovementList.adapter = BalanceMovementsAdapter(context!!,balance,viewModel)
+            balanceMovementList.adapter = BalanceMovementsAdapter(requireContext(),balance,viewModel)
             var total = 0.0
             balance.forEach {total += it.movementAmount!! }
             lblBalanceTotal.text = "Total Conta: ${total}€"

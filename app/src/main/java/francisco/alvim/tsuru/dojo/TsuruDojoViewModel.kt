@@ -21,11 +21,14 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     val database = AppDatabase.invoke(application)
     val removeMonthPaymentClick = MutableLiveData<Event<MonthPaymentEntity>>()
     val removeStudentClick = MutableLiveData<Event<StudentEntity>>()
+    val removeStudentNoteClick = MutableLiveData<Event<StudentNotesEntity>>()
     val removeEventClick = MutableLiveData<Event<EventEntity>>()
     val removeEventPaymentClick = MutableLiveData<Event<EventPaymentEntity>>()
     val paymentsDoneInMonth = MutableLiveData<List<Pair<StudentEntity,MonthPaymentEntity?>>>()
     val currentMonthAndYear = MutableLiveData<String>()
+    val studentNameOfStudentNotes = MutableLiveData<String>()
     val allStudents = MutableLiveData<List<StudentEntity>>()
+    val allNotesOfStudent = MutableLiveData<List<StudentNotesEntity>>()
     val studentsNotInEventPaymentList = mutableListOf<String>()
     val selectedNamesInPickerList = mutableListOf<String>()
     val studentsNotInEventPayment = MutableLiveData<Event<List<String>>>()
@@ -54,9 +57,11 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
     val newMovementDateMonth = MutableLiveData<Int>()
     val newMovementDateYear = MutableLiveData<Int>()
     val openEventPage = MutableLiveData<Event<Unit>>()
-    val onbackClick = MutableLiveData<Event<Unit>>()
+    val openStudentNotes = MutableLiveData<Event<Unit>>()
+    val onBackClick = MutableLiveData<Event<Unit>>()
 
-    var currentStudent = StudentEntity(null,"","","",true,35)
+    var currentStudent = StudentEntity(null,"","","",true,40)
+    var currentStudentNote = StudentNotesEntity(null,null,"")
     var currentEvent = EventEntity(null,"",0.0,0)
     var currentEventPayment = EventPaymentEntity(null,0,"",0.0,0,false)
     var currentBalanceMovement = BalanceEntity(null,0,0,0.0,0,"")
@@ -71,7 +76,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
 
     init {
         ioScope.launch {
-            val studentList = database.studentDao().getAllStudents()
+            val studentList = database.studentDao().getAllStudents().sortedBy { it.studentName }
 
             studentList.forEach {
                 arrangedNameList.add(it.studentName ?: "")
@@ -308,6 +313,82 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
         }
     }
 
+    fun checkStudentNotesClick(){
+        openStudentNotes.value = Event(Unit)
+    }
+
+    fun onRemoveStudentNotesClick(studentNote: StudentNotesEntity){
+        removeStudentNoteClick.value = Event(studentNote)
+    }
+
+    fun getCurrentStudentNotes(){
+        getStudentNotes(currentStudent.id ?: return)
+        getStudentNameOfStudentNotes(currentStudent.id ?: return)
+    }
+    fun getStudentNameOfStudentNotes(studentId: Int) {
+        ioScope.launch {
+            val student = database.studentDao().getStudentById(studentId)
+            Handler(Looper.getMainLooper()).post {
+                studentNameOfStudentNotes.value = student.studentName ?: ""
+            }
+        }
+    }
+
+    fun setCurrentStudentNote(pos: Int){
+        allNotesOfStudent.value?.get(pos)?.let{
+            currentStudentNote = it
+        }
+    }
+
+    fun getStudentNotes(studentId: Int){
+        ioScope.launch {
+            val studentNotes = database.studentNotesDao().getStudentNotesOfStudent(studentId)
+            Handler(Looper.getMainLooper()).post {
+                allNotesOfStudent.value = studentNotes
+            }
+        }
+    }
+
+    fun addNewStudentNote(note:String) {
+        addNewStudentNote(note, currentStudent.id ?: return)
+
+    }
+
+    fun addNewStudentNote(note:String, studentId: Int){
+        ioScope.launch {
+            val studentNote = StudentNotesEntity(null, studentId, note )
+            database.studentNotesDao().insertStudentNote(studentNote)
+            getStudentNotes(studentId)
+        }
+    }
+
+    fun updateStudentNote(note:String) {
+        updateStudentNote(note, currentStudentNote)
+    }
+
+    fun updateStudentNote(note: String, studentNote: StudentNotesEntity){
+        ioScope.launch {
+            studentNote.studentNote = note
+            database.studentNotesDao().updateStudentNote(studentNote)
+        }
+    }
+
+    fun removeStudentNote(studentNote: StudentNotesEntity){
+        ioScope.launch {
+            database.studentNotesDao().deleteStudentNote(studentNote)
+            getStudentNotes(currentStudent.id ?: return@launch)
+        }
+    }
+
+    fun removeStudentNotesOfStudent(student: StudentEntity){
+        ioScope.launch {
+            val students = database.studentNotesDao().getStudentNotesOfStudent(student.id ?: return@launch)
+            students.forEach {
+                database.studentNotesDao().deleteStudentNote(it)
+            }
+        }
+    }
+
 
 
     fun getEvents() {
@@ -499,7 +580,7 @@ class TsuruDojoViewModel(application : Application) : AndroidViewModel(applicati
 
 
     fun onBackClick() {
-        onbackClick.value = Event(Unit)
+        onBackClick.value = Event(Unit)
     }
 
     fun addSelectedStudentNameInPicker(clickedPosition: Int) {

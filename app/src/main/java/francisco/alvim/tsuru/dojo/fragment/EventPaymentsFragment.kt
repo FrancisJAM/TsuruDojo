@@ -9,6 +9,7 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 
@@ -34,14 +35,12 @@ import java.util.*
 
 
 class EventPaymentsFragment : Fragment() {
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
     private var isNewEventPayment = true
     private var currentEvent: EventEntity? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_event_payments, container, false)
-        viewModel = activity?.let { ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
-        return view
+        return inflater.inflate(R.layout.fragment_event_payments, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -60,7 +59,7 @@ class EventPaymentsFragment : Fragment() {
     private fun setupObservers() {
         viewModel.currentEventPayments.observe(viewLifecycleOwner, Observer { eventPayments ->
             eventPaymentList.apply {
-                adapter = EventPaymentsAdapter(context!!, eventPayments, viewModel)
+                adapter = EventPaymentsAdapter(requireContext(), eventPayments, viewModel)
                 setOnItemClickListener { _, _, pos, _ ->
                     showEventPaymentForStudent(eventPayments[pos])
                     viewModel.currentEventPayment = eventPayments[pos]
@@ -75,7 +74,7 @@ class EventPaymentsFragment : Fragment() {
         })
 
         viewModel.removeEventPaymentClick.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 val eventPayment = it.getContent()
                 val dialog = AlertDialog.Builder(context)
                 dialog.apply {
@@ -102,15 +101,15 @@ class EventPaymentsFragment : Fragment() {
             eventPaymentsTotal.text = it
         })
         viewModel.studentsNotInEventPayment.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
-                Dialog(context!!).apply {
+            it.onFirstRun {
+                Dialog(requireContext()).apply {
                     requestWindowFeature(Window.FEATURE_NO_TITLE)
                     setCancelable(false)
                     setContentView(R.layout.student_picker)
 
                     studentPickerList.apply {
                         adapter = StudentsMissingInEventPaymentsAdapter(
-                            context!!,
+                            requireContext(),
                             it.getContent(),
                             viewModel
                         )
@@ -135,7 +134,7 @@ class EventPaymentsFragment : Fragment() {
             }
         })
         viewModel.selectedNamesInPicker.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 it.getContent().forEach { name ->
                     if (name.isNotBlank()) viewModel.addNewEventPaymentStudent(name)
                 }
@@ -179,7 +178,7 @@ class EventPaymentsFragment : Fragment() {
             btnEventPaymentsPayed.setActivated(!btnEventPaymentsPayed.isActivated)
         }
         btnNewEventPaymentChooseDate.setOnClickListener {
-            createDateDialog(etNewEventPaymentDateDay, etNewEventPaymentDateMonth, etNewEventPaymentDateYear, viewModel, WheelType.EVENT_PAYMENTS_DATE_PICK, context!!)
+            createDateDialog(etNewEventPaymentDateDay, etNewEventPaymentDateMonth, etNewEventPaymentDateYear, viewModel, WheelType.EVENT_PAYMENTS_DATE_PICK, requireContext())
         }
         btnEventPaymentsBack.setOnClickListener {
             viewModel.onBackClick()

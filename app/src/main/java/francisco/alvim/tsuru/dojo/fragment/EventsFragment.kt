@@ -9,6 +9,7 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import android.widget.FrameLayout
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.aigestudio.wheelpicker.WheelPicker
@@ -28,12 +29,10 @@ import kotlinx.android.synthetic.main.fragment_events.*
 import java.util.*
 
 class EventsFragment : Fragment() {
-    lateinit var viewModel: TsuruDojoViewModel
+    val viewModel: TsuruDojoViewModel by activityViewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_events, container, false)
-        viewModel = activity?.let { ViewModelProviders.of(it).get(TsuruDojoViewModel::class.java)} ?: ViewModelProviders.of(this as Fragment).get(TsuruDojoViewModel::class.java)
-        return view
+        return inflater.inflate(R.layout.fragment_events, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -51,7 +50,7 @@ class EventsFragment : Fragment() {
     private fun setupObservers() {
 
         viewModel.allEvents.observe(viewLifecycleOwner, Observer {
-            eventList.adapter = EventsAdapter(context!!,it, viewModel)
+            eventList.adapter = EventsAdapter(requireContext(),it, viewModel)
             eventList.setOnItemClickListener { _, _, pos, _ ->
                 viewModel.headToEventPage(it[pos])
             }
@@ -62,7 +61,7 @@ class EventsFragment : Fragment() {
         })
 
         viewModel.removeEventClick.observe(viewLifecycleOwner, Observer {
-            if (it.isFirstRun) {
+            it.onFirstRun {
                 val event = it.getContent()
                 val dialog = AlertDialog.Builder(context)
                 dialog.apply {
@@ -112,7 +111,7 @@ class EventsFragment : Fragment() {
             closeKeyboard(it)
         }
         btnNewEventChooseDate.setOnClickListener {
-            createDateDialog(etNewEventDateDay, etNewEventDateMonth, etNewEventDateYear, viewModel, WheelType.EVENTS_DATE_PICK, context!!)
+            createDateDialog(etNewEventDateDay, etNewEventDateMonth, etNewEventDateYear, viewModel, WheelType.EVENTS_DATE_PICK, requireContext())
         }
     }
 

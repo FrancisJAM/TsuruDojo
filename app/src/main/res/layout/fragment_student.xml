@@ -13,7 +13,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:text="Alunos"
+        android:text="@string/alunos"
         android:textColor="#000000"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -47,7 +47,7 @@
             android:layout_marginTop="8dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:text="Nome"
+            android:text="@string/nome"
             />
 
         <EditText
@@ -61,10 +61,12 @@
             android:maxLines="1"
             android:backgroundTint="#666666"
             android:textColor="@color/default_black"
-            tools:text="Francisco Jorge Alvim Martins"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvNewStudentNameLabel"
-            />
+            tools:ignore="Autofill,LabelFor"
+            tools:text="Francisco Jorge Alvim Martins" />
+
+        />
 
 
         <TextView
@@ -76,7 +78,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/tvNewStudentLevelLabel"
             app:layout_constraintTop_toBottomOf="@+id/etNewStudentName"
-            android:text="Contacto"
+            android:text="@string/contacto"
             />
 
         <EditText
@@ -89,10 +91,11 @@
             android:maxLines="1"
             android:backgroundTint="#666666"
             android:textColor="@color/default_black"
-            tools:text="00351912821122"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/tvNewStudentContactLabel"
             app:layout_constraintTop_toBottomOf="@+id/tvNewStudentContactLabel"
+            tools:ignore="Autofill,LabelFor"
+            tools:text="00351912821122"
             />
 
         <TextView
@@ -104,7 +107,7 @@
             app:layout_constraintStart_toEndOf="@+id/tvNewStudentContactLabel"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etNewStudentName"
-            android:text="Graduação"
+            android:text="@string/graducao"
             />
 
         <EditText
@@ -120,6 +123,7 @@
             tools:text="10"
             app:layout_constraintStart_toStartOf="@+id/tvNewStudentLevelLabel"
             app:layout_constraintTop_toBottomOf="@+id/tvNewStudentContactLabel"
+            tools:ignore="Autofill,LabelFor"
             />
 
         <TextView
@@ -127,7 +131,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintBaseline_toBaselineOf="@+id/etNewStudentLevelNum"
             app:layout_constraintStart_toEndOf="@+id/etNewStudentLevelNum"
-            android:text="º"
+            android:text="@string/nivel"
             android:textColor="@color/normal_black"
             android:textSize="20sp"
             />
@@ -146,6 +150,7 @@
             tools:text="Dan"
             app:layout_constraintStart_toEndOf="@+id/etNewStudentLevelNum"
             app:layout_constraintTop_toBottomOf="@+id/tvNewStudentContactLabel"
+            tools:ignore="Autofill,LabelFor"
             />
 
         <Button
@@ -159,6 +164,19 @@
             app:layout_constraintEnd_toEndOf="@+id/etNewStudentLevelType"
             />
 
+        <ImageButton
+            android:id="@+id/btnStudentCheckNotes"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@color/transparent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_note_add_black"
+            app:layout_constraintBottom_toBottomOf="@+id/btnStudentLevel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnStudentLevel"
+            app:layout_constraintTop_toTopOf="@+id/btnStudentLevel" />
+
         <TextView
             android:id="@+id/tvNewStudentDefaultPaymentLabel"
             android:layout_width="wrap_content"
@@ -166,7 +184,7 @@
             android:layout_marginStart="16dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etNewStudentContact"
-            android:text="Mensalidade"
+            android:text="@string/mensalidade"
             />
 
         <EditText
@@ -183,6 +201,7 @@
             tools:text="20.50"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvNewStudentDefaultPaymentLabel"
+            tools:ignore="Autofill,LabelFor"
             />
 
         <TextView
@@ -191,7 +210,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="0dp"
             android:gravity="center"
-            android:text="€"
+            android:text="@string/euro"
             android:textSize="20sp"
             android:textColor="@color/default_black"
             app:layout_constraintStart_toEndOf="@+id/etNewStudentDefaultPayment"
@@ -203,7 +222,7 @@
             android:id="@+id/tvNewStudentTrainsLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Treina"
+            android:text="@string/treina"
             android:gravity="center"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp"
